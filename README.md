@@ -465,14 +465,39 @@ Here is how the code should look based on what I've given you.  While I generall
         draw_image('C:/mnist/train-images-idx3-ubyte.gz', 'C:/mnist/train-labels-idx1-ubyte.gz', 500)
         draw_image('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k-labels-idx1-ubyte.gz', 500)
     
-    
-    
-    
-    
+## Creating the Neural Network Class
+Surprisingly, the class for the neural network is actually one of the easiest parts of this tutorial.  We only have to create an **\_\_init\_\_** and **forward** function for it. As usual, I'll give you the code first, and then go over it piece by piece:
 
+    import torch.nn as nn
 
+    class NeuralNet(nn.Module):
+        def __init__(self):
+            super(NeuralNet, self).__init__()
+            
+            self.linear1 = nn.Linear(784, 100)
+            self.linear2 = nn.Linear(100, 50)
+            self.linear3 = nn.Linear(50, 10)
 
+            self.sigmoid = nn.Sigmoid()
 
+        def forward(self, x):
+            x = self.linear1(x)
+            x = self.sigmoid(x)
+            x = self.linear2(x)
+            x = self.sigmoid(x)
+            x = self.linear3(x)
+            return x
+    
+Section by section:
+
+    import torch.nn as nn
+    class NeuralNet(nn.Module):
+
+The two easy prerequisites to this are importing the neural network package for Pytorch and then creating the NeuralNet class that extends nn.Module.  Just like how we extended the Dataset class earlier for our dataset, we want to extend the Module class to build our neural network.  All Pytorch neural networks use nn.Module as their base class.  If you want to see the documentation for it, it's the first entry under the Containers section [here](https://pytorch.org/docs/stable/nn.html).
+
+    super(NeuralNet, self).__init__()
+
+Next we 
 
 
 
