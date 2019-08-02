@@ -6,7 +6,7 @@ This tutorial was created to be in-depth enough that even people with very littl
 
 ## Introduction
 
-Pytorch is a dataset of handwritten images, often considered the 'Hello world!' of machine learning.  It is composed of 70,000 images, which are further split into 60,000 images designated for training neural networks and 10,000 designated for testing them.  While many tutorials for MNIST use a set that has already been preprocessed, this one will cover how to load the set from the raw files.  This method was chosen to give more experience with loading actual datasets, as most real world data is not neatly processed for you.  With that said, let's begin!
+Pytorch is a dataset of handwritten digits, often considered the 'Hello world!' of machine learning.  It is composed of 70,000 images, which are further split into 60,000 images designated for training neural networks and 10,000 designated for testing them.  Each image is of the size 28x28 pixels and depicts a number from 0-9.  While many tutorials for MNIST use a set that has already been preprocessed, this one will cover how to load the set from the raw files.  This method was chosen to give more experience with loading actual datasets, as most real world data is not neatly processed for you.  With that said, let's begin!
 
 ### What You Need
 Installing the following programs/packages can be difficult for a beginner.  I'll try to point you in the right direction, but if you are having trouble then you should look up more in-depth tutorials on that specific topic online before moving forward.
@@ -466,7 +466,7 @@ Here is how the code should look based on what I've given you.  While I generall
         draw_image('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k-labels-idx1-ubyte.gz', 500)
     
 ## Creating the Neural Network Class
-Surprisingly, the class for the neural network is actually one of the easiest parts of this tutorial.  We only have to create an **\_\_init\_\_** and **forward** function for it. As usual, I'll give you the code first, and then go over it piece by piece:
+We're now going to create a separate file for the actual neural network class. Create a new file named NeuralNetwork.py and we will create this class in there. Surprisingly, the class for the neural network is actually one of the easiest parts of this tutorial.  We only have to create an **\_\_init\_\_** and **forward** function for it. As usual, I'll give you the code first, and then go over it piece by piece:
 
     import torch.nn as nn
 
@@ -493,11 +493,42 @@ Section by section:
     import torch.nn as nn
     class NeuralNet(nn.Module):
 
-The two easy prerequisites to this are importing the neural network package for Pytorch and then creating the NeuralNet class that extends nn.Module.  Just like how we extended the Dataset class earlier for our dataset, we want to extend the Module class to build our neural network.  All Pytorch neural networks use nn.Module as their base class.  If you want to see the documentation for it, it's the first entry under the Containers section [here](https://pytorch.org/docs/stable/nn.html).
+The two easy prerequisites to this are importing the neural network package for Pytorch and then creating the NeuralNet class that extends nn.Module.  Just like how we extended the Dataset class earlier for our dataset, we want to extend the Module class to build our neural network.  All Pytorch neural networks use nn.Module as their base class.  If you're interested, [here](https://pytorch.org/docs/stable/nn.html#torch.nn.Module) is the documentation.
 
     super(NeuralNet, self).__init__()
 
-Next we 
+Next we use the super function to call the \_\_init\_\_ of the parent function.  The Pytorch documentation says that this is required, however I haven't found the exact reason why this is done.  Usually super is used so you can inhereit methods from the parent, but why it calls the \_\_init\_\_ directly is something I'm not sure of.
+
+    self.linear1 = nn.Linear(784, 100)
+    self.linear2 = nn.Linear(100, 50)
+    self.linear3 = nn.Linear(50, 10)
+
+Here we create the layers of our neural network to use later in the forward function.  As can be seen in the [documentation](https://pytorch.org/docs/stable/nn.html#torch.nn.Linear), the format for nn.Linear is **nn.Linear(in_features, out_features, bias = True)**.  We are leaving bias as True so we don't need to explicitly change it, but we do need to choose the in and out features.
+
+For linear layer 1, we feed in, as the in_features, all 784 pixels from the image. Then for the out_features I chose a sufficently large number of features I wanted the neural network to look for, in this case 100. 
+
+For the second layer, I took the out_features from the first layer (100) and used them as the in_features here.  I then did the same thing as with the first layer and chose a sufficently large number of features to look for, in this case 50, for the out_features.  You can follow this pattern of 'this layer's out_features become the next layers in_features' to make as large of a neural network as you want.
+
+For the third layer, I used the out_features from the previous layer (50) as the in_features.  As this is the last layer, we want the  out_features for this layer to be the final output/choice of the neural network.  This is the neural network's guess as to which digit between 0-9 the image depicts.  As 0-9 gives us 10 choices, the output will be 10 out_features.  Without any abstraction, the real form of the output will be 10 numbers that increase based off the patterns the neural network has trained for.  The more patterns it sees relating to that digit, the higher the corresponding number in the output.  By choosing the highest of these 10 outputs, we get the neural network's guess.  That part will be done later, though.
+
+    self.sigmoid = nn.Sigmoid()
+
+Lastly we create the sigmoid activation function with [nn.Sigmoid](https://pytorch.org/docs/stable/nn.html#torch.nn.Sigmoid).  We will feed the output of each linear layer into this to create some non-linearity to the model.  Without this, our linear layers would basically just be doing linear regression.  By adding nonlinear activations, we can better fit our model to the data as it does not follow a linear pattern.
+
+    def forward(self, x):
+        x = self.linear1(x)
+        x = self.sigmoid(x)
+        x = self.linear2(x)
+        x = self.sigmoid(x)
+        x = self.linear3(x)
+        return x
+
+The last function in this class is the forward function, where we build out network with the objects we just created.  Whenever we do a forward pass to send data through the network, this function is used.  Here, x is the input data from the dataset that is passed through as one of the parameters for the function.  We then put this input data through the linear layers and sigmoid activations alternately before returning the output data from the last layer.  This is the structure of one forward pass through the neural network, where the linear layers do a linear transformation on the data and then send the output of the current layer into a nonlinear activation function 
+
+
+
+
+
 
 
 
