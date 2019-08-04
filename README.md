@@ -466,7 +466,7 @@ Here is how the code should look based on what I've given you.  While I generall
         draw_image('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k-labels-idx1-ubyte.gz', 500)
     
 ## Creating the Neural Network Class
-We're now going to create a separate file for the actual neural network class. Create a new file named NeuralNetwork.py and we will create this class in there. Surprisingly, the class for the neural network is actually one of the easiest parts of this tutorial.  We only have to create an **\_\_init\_\_** and **forward** function for it. As usual, I'll give you the code first, and then go over it piece by piece:
+We're now going to create a separate file for the actual neural network class. Create a new file named **NeuralNetwork.py** and we will create this class in there. Surprisingly, the class for the neural network is actually one of the easiest parts of this tutorial.  We only have to create an **\_\_init\_\_** and **forward** function for it. As usual, I'll give you the code first, and then go over it piece by piece:
 
     import torch.nn as nn
 
@@ -513,7 +513,7 @@ For the third layer, I used the out_features from the previous layer (50) as the
 
     self.sigmoid = nn.Sigmoid()
 
-Lastly we create the sigmoid activation function with [nn.Sigmoid](https://pytorch.org/docs/stable/nn.html#torch.nn.Sigmoid).  We will feed the output of each linear layer into this to create some non-linearity to the model.  Without this, our linear layers would basically just be doing linear regression.  By adding nonlinear activations, we can better fit our model to the data as it does not follow a linear pattern.
+Lastly we create the sigmoid activation function with [nn.Sigmoid](https://pytorch.org/docs/stable/nn.html#torch.nn.Sigmoid).  We will feed the output of each linear layer into this to create some nonlinearity to the model.  Without this, our linear layers would basically just be doing linear regression.  By adding nonlinear activations, we can better fit our model to the data as our data does not follow a linear pattern.
 
     def forward(self, x):
         x = self.linear1(x)
@@ -523,7 +523,71 @@ Lastly we create the sigmoid activation function with [nn.Sigmoid](https://pytor
         x = self.linear3(x)
         return x
 
-The last function in this class is the forward function, where we build out network with the objects we just created.  Whenever we do a forward pass to send data through the network, this function is used.  Here, x is the input data from the dataset that is passed through as one of the parameters for the function.  We then put this input data through the linear layers and sigmoid activations alternately before returning the output data from the last layer.  This is the structure of one forward pass through the neural network, where the linear layers do a linear transformation on the data and then send the output of the current layer into a nonlinear activation function 
+The last function in this class is the forward function, where we build out network with the objects we just created.  Whenever we do a forward pass to send data through the network, this function is used.  Here, x is the input data from the dataset that is passed through as one of the parameters for the function.  We then put this input data through the linear layers and sigmoid activations alternately before returning the output data from the last layer.  This is the structure of one forward pass through the neural network, where the linear layers do a linear transformation on the data and then send the output of the current layer into a nonlinear activation function to define the output in a nonlinear way.  The returned output can then be used to get the guess for the image once the pass ends.
+
+With that, we've finished the neural network.  Now all we have left is the training and testing functions and we're done!
+
+## Creating Training and Testing Program
+Our last taks for the tutorial is creating the functions to train and test the neural network.  This is the main program, so we'll call the new file for this **main.py**.  This program will be split into five sections: imports, parameters, training function, testing function, and main.  I will post the full code for the file at the end of those five sections.
+
+### Training and Testing - Imports
+
+    from NeuralNetwork import NeuralNet
+    from MNISTDataset import MNISTDataset
+    import torch.nn as nn
+    import torch
+    import matplotlib.pyplot as plt
+    
+The imports you'll need for this are the two previous classes we made, NeuralNet and MNISTDataset, as well as torch.nn, torch, and matplotlib.  I think by now these don't really need explanation beyond that we need the first two for loading the dataset into our neural network and we need the last three for playing around with pytorch and plotting values.
+
+### Training and Testing - DataLoader and Parameters
+Next we're going to create the dataloaders for each dataset, as well as the parameters for the neural network.  Here's the code:
+
+    training_dataset = MNISTDataset('C:/Easy/train-images-idx3-ubyte.gz', 'C:/Easy/train-labels-idx1-ubyte.gz')
+    test_dataset = MNISTDataset('C:/Easy/t10k-images-idx3-ubyte.gz', 'C:/Easy/t10k-labels-idx1-ubyte.gz')
+
+    training_batch_size = 50
+    test_batch_size = 1000
+
+    training_loader = torch.utils.data.DataLoader(training_dataset, batch_size = training_batch_size, shuffle = True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = test_batch_size, shuffle = True)
+
+    neural_net = NeuralNet()
+    
+    num_epochs = 50
+    
+    train_losses = []
+    train_counter = []
+    test_accuracy = []
+    test_losses= []
+
+    test_counter = [num * training_dataset.num_images for num in range(num_epochs + 1)]
+
+    loss_function = nn.CrossEntropyLoss()
+    
+    learning_rate = .2
+    momentum = .9
+    
+    optimizer = torch.optim.SGD(neural_net.parameters(), lr = learning_rate, momentum = momentum)
+
+    random_seed = 1
+    torch.backends.cudnn.enabled = False
+    torch.manual_seed(random_seed)
+
+Section by section:
+
+    training_dataset = MNISTDataset('C:/mnist/train-images-idx3-ubyte.gz', 'C:/mnist/train-labels-idx1-ubyte.gz')
+    test_dataset = MNISTDataset('C:/mnist/t10k-images-idx3-ubyte.gz', 'C:/mnist/t10k-labels-idx1-ubyte.gz')
+
+Here we create the training and testing dataset objects using the custom dataset class we created before. Once again, make sure the training files go with the training dataset and the testing files go with the testing dataset.
+
+    training_batch_size = 50
+    test_batch_size = 1000
+
+Here we will create the batch size for the DataLoader.  Batches are, as the name implies, subsets of the full dataset that are used for training instead of training with the whole dataset at once.  By feeding in batches of samples rather than all of them, it saves on memory usage and 
+
+
+
 
 
 
