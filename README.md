@@ -552,9 +552,9 @@ Next we're going to create the dataloaders for each dataset, as well as the para
     training_loader = torch.utils.data.DataLoader(training_dataset, batch_size = training_batch_size, shuffle = True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = test_batch_size, shuffle = True)
 
+    num_epochs = 25
+
     neural_net = NeuralNet()
-    
-    num_epochs = 50
     
     train_losses = []
     train_counter = []
@@ -584,7 +584,81 @@ Here we create the training and testing dataset objects using the custom dataset
     training_batch_size = 50
     test_batch_size = 1000
 
-Here we will create the batch size for the DataLoader.  Batches are, as the name implies, subsets of the full dataset that are used for training instead of training with the whole dataset at once.  By feeding in batches of samples rather than all of them, it saves on memory usage and 
+Here we will create the batch size for the DataLoader.  Batches are, as the name implies, subsets of the full dataset that are used for training instead of training with the whole dataset at once.  By feeding in batches of samples rather than all of them, it saves on memory usage and makes learning move faster as you aren't calculating the gradient over the whole set. If you want to learn more, [this link](https://datascience.stackexchange.com/a/16818) goes into more detail.  We use batches of 50 for training as you want rather small batches when doing gradient descent and 1000 for testing as it breaks up the 10,000 more evenly.  The batch size doesn't particularly matter for testing so the choice of 1000 was rather arbitrary.  The test size of 50 is slightly abnormal as the standard is usally 32 or 64, but it shouldn't affect the results here in any signficant way.
+
+    training_loader = torch.utils.data.DataLoader(training_dataset, batch_size = training_batch_size, shuffle = True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = test_batch_size, shuffle = True)
+
+These two lines handle loading the two datasets into a [Pytorch Dataloader](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader).  The reason for making the custom Pytorch Datasets is so that we could do this.  The format for the DataLoader object (that we are worried about at least) is **DataLoader(dataset, batch_size, shuffle)**.  The dataset is the custom one we created, the batch_size is what we just defined, and shuffle, when set to True, reshuffles the data every epoch.  Now we can use this dataloader to feed our dataset into the neural network, and it also shuffles the data everytime as a bonus.  Shuffling the dataset serves many purposes, but generally it helps to prevent overfitting as the order which you feed the data into the network may affect the weights of the network if the order remains static across all epochs.  For more complex info on why shuffling is good, look at [this answer](https://datascience.stackexchange.com/a/24539/79065) for the more complex explanation and the one below it for a more simple way of putting it.
+
+    num_epochs = 25
+
+Next we set the number of epochs.  This is simply how long we are training for.  I've found 25 to be a reasonable amount, but feel free to experiment.
+
+    neural_net = NeuralNet()
+
+    train_losses = []
+    train_counter = []
+    test_accuracy = []
+    test_losses= []
+
+Next we intilalize the neural network by creating an object of the neural network class we created in the last section.  This is our actual neural network.  The next four lines are just intializing lists for values we'll be collecting uring training and testing.  We want to be able to append the data to them as the program runs so we can display the loss and accuracy at the end.  
+
+    test_counter = [num * training_dataset.num_images for num in range(num_epochs + 1)]
+
+This is a list of the point for where each epoch ends.  This will later be used to plot the average loss during testing.  What is actually in the test counter variable is basically a list starting with 0 and adding the number of images in the training dataset each times.  So with 60,000 images in the training dataset, this is 0, 60000, 120000, 180000, etc.  The reason we have a 0 here is that we will do an intial test before any training is done to see how well the neural network does with random guessing (no training).
+
+    loss_function = nn.CrossEntropyLoss()
+
+Next we create our loss function using [Cross Entropy Loss](https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss).  The loss functon is used to evaluate how well the neural network is doing.  Cross entropy loss punishes the model more heavily for being confident in the wrong answer.  We are using it as it is quite good for classification problems.
+
+    learning_rate = .2
+    
+    momentum = .9
+
+Next we set the learning rate and momentum.  The learning rate affects how quickly the weights of the neural net change.  Too high of a learning rate can skip the optimal weight, well too low of one may cause the model to get stuck in a local minimum.  Due to this, it is worthwhile to test many different learning rate.  It is .2 here as I found it to be of those I tested.  Momentum is used to speed up the convergence of a neural network.  To see a picture of how it works, see [this link](https://www.quora.com/What-exactly-is-momentum-in-machine-learning).
+
+    optimizer = torch.optim.SGD(neural_net.parameters(), lr = learning_rate, momentum = momentum)
+
+Next we create our optimizer.  The optimzer tweaks the weights of the network in order to minimize the loss function.  This makes the model as accuracte as possible.  We are using [Stochaster Gradient Descent](https://pytorch.org/docs/stable/optim.html#torch.optim.SGD) here (SGD) which samples a subset of the data in order to determine how to change the weight.  For the arguments, it takes the parameters we want to optimize, the learning rate we just set, and the momentum we also just set.  If you want to know more about what neural_net.parameres() is, check out [this link](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/#parameters-in-depth).
+
+    random_seed = 1
+    torch.backends.cudnn.enabled = False
+    torch.manual_seed(random_seed)
+
+The last thing we'll do before we make the training function is to set the seed for randomization so our results will be reproducible.  Basically we choose a random seed here, turn off some backends, and then manually set the seed we chose as the random seed.  Check [here](https://pytorch.org/docs/stable/notes/randomness.html) if you want to know more.
+
+### Training and Testing - Making the Training Function
+This next section will cover the creation of the training function.  This function will be actually used to train the neural network.  While small, this code is pretty dense.  As usual, here is the code:
+
+    def train(epoch):
+        for batch_idx, (images, labels) in enumerate(training_loader):
+            optimizer.zero_grad()
+
+            output = neural_net(images)
+
+            loss = loss_function(output, labels)
+
+            loss.backward()
+            optimizer.step()
+            
+            if batch_idx % 100 == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                        epoch, batch_idx * training_batch_size, len(training_loader.dataset),
+                        100 * batch_idx / len(training_loader), loss.item()))
+                train_losses.append(loss.item())
+                train_counter.append((batch_idx * training_batch_size) + ((epoch - 1) * len(training_loader.dataset)))
+
+Section by section:
+
+    def train(epoch):
+        for batch_idx, (images, labels) in enumerate(training_loader):
+
+This for loop enumerates over the dataloader.  It gets the batch index and uses the \_\_getitem\_\_ function we made way back in the dataset class to get out the images and labels for each batch.  This for loop will go through all the batches in the training dataset   Now that we have the images and labels, we can now get ready to train the neural network.
+
+
+
+
 
 
 
