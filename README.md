@@ -2,7 +2,7 @@
 
 This tutorial will cover creating a custom Pytorch Dataset with the MNIST dataset and using it to train a basic feedforward neural network in Pytorch.  There will be four main parts: extracting the MNIST data into a useable form, creating the neural network itself, training the network, and, lastly, testing it.
 
-This tutorial was created to be in-depth enough that even people with very little experience could understand it.  Many tutorial focus on *what* they did, not *why* they did it.  I try to delve more deeply into the *why* aspect, but due to that the tutorial is a little lengthy.  I will generally put my code at the beginning of each section, so if you feel you understand it, feel free not to read the more in-depth line by line explanations unless you feel you need them.
+This tutorial was created to be in-depth enough that even people with very little experience could understand it.  Many tutorial focus on *what* they did, not *why* they did it.  I try to delve more deeply into the *why* aspect, but due to that the tutorial is a little lengthy.  I will generally put my code at the beginning of each section, so if you feel you understand it, feel free not to read the more in-depth line by line explanations unless you feel you need them.  When doing a tutorial I'd rather err on the side of overexplaining than not.
 
 ## Introduction
 
@@ -644,29 +644,107 @@ This next section will cover the creation of the training function.  This functi
             
             if batch_idx % 100 == 0:
                 print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                        epoch, batch_idx * training_batch_size, len(training_loader.dataset),
+                        epoch, batch_idx * training_batch_size, len(training_dataset),
                         100 * batch_idx / len(training_loader), loss.item()))
                 train_losses.append(loss.item())
-                train_counter.append((batch_idx * training_batch_size) + ((epoch - 1) * len(training_loader.dataset)))
+                train_counter.append((batch_idx * training_batch_size) + ((epoch - 1) * len(training_dataset)))
 
 Section by section:
 
     def train(epoch):
         for batch_idx, (images, labels) in enumerate(training_loader):
 
-This for loop enumerates over the dataloader.  It gets the batch index and uses the \_\_getitem\_\_ function we made way back in the dataset class to get out the images and labels for each batch.  This for loop will go through all the batches in the training dataset   Now that we have the images and labels, we can now get ready to train the neural network.
+This loop enumerates over the dataset, batch by batch, using the dataloader. It returns an index for the current batch as well as two lists with the data of all the entries in each batch.  The images and labels for each batch are gotten through the \_\_getitem\_\_ function we made way back in the dataset class.  Now that we have a way to get the images and labels, we can get ready to train the neural network.
 
+    optimizer.zero_grad()
 
+The first thing we do for each iteration of the for loop is to zero the gradients of the optimizer.  If we do not do this, the gradients will accumulate over time, causing the gradient to point in the wrong direction, preventing correct learning.  Once we finish the network, if you comment out this line and run it, you'll find that no learning will occur adn the loss will skyrocket.  This is due to the gradient accumulation. As usual [here](https://stackoverflow.com/a/48009142/11788566) is more optional info if you want to dig a bit deeper.
 
+    output = neural_net(images)
 
+Here we put the images in the neural network and get returned an ouput.  Assuming we are using a batch size of 50, the output is a 50x10 tensor (batch size x 10) where the guesses for each image are a 1x10 tensor (a single row, 10 values long). Each column corresponds to one of the digits we are guessing between 0 and 9.  The value in each column is the neural network's confidence in the current image being that digit.  So, for example, if the image is a 9, the output will be a tensor of the neural network's confidence in the image being a 0, 1, 2... up to 9.  The value of column 0 is the confidence in the image being a 0, the value in column 1 the confidence it is a 1, etc.  Then we can look at the values in that 1x10 tensor and determine what the guess is by finding which column has the max value (max confidence).  Hopefully it's column 9 if our image is a 9.  This will be more important with testing however, as right now we only need to put the output into the loss function.
 
+    loss = loss_function(output, labels)
 
+Here we compute the loss using the output and labels.  We compare what guesses we got from the model (output) with the actual answers (labels).  This info is then used to compute the loss.  Loss is similar to error, except that rather than being a percentage, it's the sum of the errors made for each example in the training or validation (when do testing) sets.  Because of this, you can think of it as a way to see how well the model is doing for the set.  The goal is for the loss to decrease as much as possible.
 
+    loss.backward()
 
+This explanation will mainly be taken from [this Pytorch forum post](https://discuss.pytorch.org/t/what-does-the-backward-function-do/9944/2) which is a great explanation.  **loss.backward()** is used to compute the derivative **dloss/dx** for every parameter **x** which has requires_grad = True.  requires_grad is just used to flag if a parameter need a gradient computed when used. [This](https://pytorch.org/docs/stable/notes/autograd.html) is the detailed Pytorch documentaion on it.  If you don't know what gradients are, don't worry about it for now, but look them up eventually as explaining gradient descent is beyond the scope of this tutorial. Anyway, once these gradients are computed, **loss.backward()** sums them into **x.grad**.  This is then used in **optimizer.step()**, which is the next line of code.
 
+    optimizer.step()
+    
+**optimizer.step()** is where the values of the parameters are updated using the gradients computed in **loss.backward()**.  More specifically, the value of **x** from **loss.backward()** is changed based on the calculated **x.grad**.  This is more or less where the training actually occurs as the values used to calculate the guesses are changed.
 
+    if batch_idx % 100 == 0:
+        print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                epoch, batch_idx * training_batch_size, len(training_dataset),
+                100 * batch_idx / len(training_loader), loss.item()))
+        train_losses.append(loss.item())
+        train_counter.append((batch_idx * training_batch_size) + ((epoch - 1) * len(training_dataset)))
 
+This last section for the training function is just a pretty print statement so you can see how training is progressing.  It triggers every 5000 images as 50 (batch_idx) % 100 is only equal to 0 every every 100 batches.  As you probably know, when using .format, the {} each take a variable.  The format of this is basically telling you what epoch you are at (epoch), what the current value is (batch_idx * training_batch_size) out of the total length of the set(len(training__dataset)), the percentage you are through the current epoch (calculated by dividing the current batch index by the total batches in the loader), and then the loss for this batch.  
 
+We then append the loss to the list of training loss values as well as the current image we are at out of the total epochs.  For the current image, (batch_idx * training_batch_size) is how far we are in the current epoch and ((epoch - 1) * len(training_dataset)) is how many values we've gone through with the previous epochs.  Add them together and you have current values + previous values = total values gone so far.  We will use these two lists later to graph the training loss.
+
+With that we have finished the testing function.  Now we just need to finish the testing function and the main and we'll be done!
+
+### Training and Testing - Making the Testing Function
+Now we are creating the testing function which will be used to actually test our neural network as its training.  If the training function is built correctly, we'll hopefully get good results!  Here's the code for this section:
+
+    def test():
+        test_loss = 0
+        correct_guesses = 0
+        with torch.no_grad():
+            for images, labels in test_loader:
+
+                output = neural_net(images)
+                
+                test_loss += loss_function(output, labels).item()
+                
+                guesses = torch.max(output, 1, keepdim = True)[1]
+
+                correct_guesses += torch.eq(guesses, labels.data.view_as(guesses)).sum()
+
+            test_loss /= len(test_loader.dataset)/test_batch_size
+
+            test_losses.append(test_loss)
+
+            current_accuracy = float(correct_guesses)/float(len(test_loader.dataset))
+            test_accuracy.append(current_accuracy)
+
+            print('\nTest set: Avg. loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+                    test_loss, correct_guesses, len(test_loader.dataset),
+                    100. * current_accuracy))
+
+Section by section:
+
+    def test():
+        test_loss = 0
+        correct_guesses = 0
+
+We'll begin the testing function by intializing the variables for the loss and total correct guesses.  We'll be changing these throughout the function
+
+        with torch.no_grad():
+            for images, labels in test_loader:
+
+We will now create a for loop that gets the images and labels from the testing dateloader.  The images and labels will be in batches of 1000 as we set during the intialization.  **with torch.no_grad():** is a wrapper that will temporarily see all requires_grade flags (which we talked about earlier) to False.  As we will not be computing gradients in our testing function, this will help speed it up and reduce memory usage.  In general, use **with torch.no_grad():** when you don't need to compute gradients or backpropogate.  This will almost always be used in testing functions.
+
+    output = neural_net(images)
+
+This line does the same thing as the identical line in the training set.  Look there for an explanation.
+
+    test_loss += loss_function(output, labels).item()
+
+Here we calculate the loss, get the value of it (the .item() part) and add it to the total test_loss.  
+
+    guesses = torch.max(output, 1, keepdim = True)[1]
+
+**guesses** here is more or less explained in the explanation for **output = neural_net(images)** in the training function we just did.  I'd recommend rereading that if you don't understand this part.  Here we are getting the max values from each of the ten columns in the output.  These max values are the neural network's guesses for each image.  We are using the [torch.max](https://pytorch.org/docs/stable/torch.html#torch.max) function here, which finds the maximum value of the elements in the input tensor (here we are inputting **output**).  The [1] here gets us the indices of the max values rather than the max values themselves, which correspond to the guess of the digit (the column) rather than the actual value of the confidence from the neural network, which would be just some meaningless number or decimal to us. As an example, the confidence (which would be [0]) for the highest column, column 2, may be 1.7891... while the column index is just 2.  We want the 2 as the guess, not the 1.7891...  You can check this later by printing **guesses** after replacing [1] with [0].  
+
+    correct_guesses += torch.eq(guesses, labels.data.view_as(guesses)).sum()
+
+Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (if the element in index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then if the elementn at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. 
 
 
 
