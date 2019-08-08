@@ -58,7 +58,7 @@ To make our class a subclass of the Pytorch Dataset class (extending it) we must
 With that one, we must now create the \_\_init\_\_, \_\_len\_\_, and \_\_getitem\_\_ functions for the Dataset class.  Overriding \_\_len\_\_ and \_\_getitem\_\_ is necessary in all child classes of the Pytorch Dataset class as that is what will be called by the Pytorch Dataloader to get values from the dataset.
 
 ### Dataset - \_\_init\_\_
-The init is the constructor for our dataset class.  As the training and testing sets each have a set of images and a set corresponding labels, we will take the root (file location) of the image set and label set as arguments:
+The init is the constructor for our dataset class.  As the training and testing sets each have a set of images and a set of corresponding labels, we will take the root (file location) of the image set and label set as arguments:
 
     def __init__(self, image_data_root, label_data_root):
 
@@ -110,25 +110,25 @@ Now that we know the contents of the files, we can make variables for all of the
                 self.num_labels = 0
                 self.labels = np.empty(0)
 
-                #Functions that intialize the data
+                #Functions that initialize the data
                 self.image_init_dataset()
                 self.label_init_dataset()
 
 For the image set:
 * Saved root to open file later.
-* Intialized the magic number, number of images in the set, number of rows in each image, and number in columns in each image, which are the first 4 integers in the file. The 0's will all be replaced later with the actual numbers when we get them from the file.
+* Initialized the magic number, number of images in the set, number of rows in each image, and number in columns in each image, which are the first 4 integers in the file. The 0's will all be replaced later with the actual numbers when we get them from the file.
 * Initialized an empty numpy array which we can later replace with the full array of images.
 
 For the label set:
 * Saved root for file
 * Initialized the magic number and number of labels.
-* Intialized an empty numpy array to replace later with the labels.
+* Initialized an empty numpy array to replace later with the labels.
 
 Functions:
 * The image_init_dataset() function will be called to process the image file
 * The label_init_dataset() function will process the label file
 
-With that the \_\_init\_\_ is finished.  I promise we'll get to fun stuff soon, just trust the process.
+With that the \_\_init\_\_ is finished.  I promise we'll get to the fun stuff soon, just trust the process.
 
 ### Dataset - \_\_len\_\_ and \_\_getitem\_\_
 The length and getitem functions are required as we are extending the Pytorch Dataset class.  Luckily they are very easy to implement.  \_\_len\_\_ just requires us to return the length of the dataset, which we can pull directly from the image set file as it is one of those first 4 integers I mentioned earlier.  \_\_getitem\_\_ requires us to return a single image and label for each call based on a given index, which is simply getting values from an array. 
@@ -186,7 +186,7 @@ If you try to run this, you'll see it doesn't work.  Don't worry, we'll fix that
 ### Dataset - Getting the Image Data
 The next function we will make is the image_init_dataset() function that is called in the \_\_init\_\_ function to process the file with the image set.  
 
-As this may be difficult to follow along with, I'm going to give all the code for this function first, and then explain it piece by piece.  I wouldn't recommend copying all this intial code right away, rather I'm putting it here for you to look back at if you want to see how the the current section I'm working on fits into the bigger picture. Here's the full function:
+As this may be difficult to follow along with, I'm going to give all the code for this function first, and then explain it piece by piece.  I wouldn't recommend copying all this initial code right away, rather I'm putting it here for you to look back at if you want to see how the current section I'm working on fits into the bigger picture. Here's the full function:
 
     #This method gets the images from the MNIST dataset
     def image_init_dataset(self):
@@ -218,7 +218,7 @@ As this may be difficult to follow along with, I'm going to give all the code fo
         #Turns the data to tensors as that is the format that neural networks use
         self.images = torch.from_numpy(self.images)
 
-Section by setion:
+Section by section:
 
     def image_init_dataset(self):
         image_file = gzip.open(self.image_data_root, 'r')
@@ -227,7 +227,7 @@ After we create the function itself, we have to unzip the file so we can pull th
 
     reorder_type = np.dtype(np.int32).newbyteorder('>')
 
-The above line may be confusing depending on how much you know of computer science.  This data is stored in a big-endian byte format, which is type of byte storage format.  Some CPU's read bytes as big-endian and some as little-endian.  Typically, the big-endian format is used by non-Intel processors, while Intel processors use little-endian.  This byte order should make it work no matter what, however if you are getting getting numbers that aren't 60000, 10000, or 28 for the number of integers or image dimensions, try switching the byte order the other way by changing the '>' to a '<'.
+The above line may be confusing depending on how much you know of computer science.  This data is stored in a big-endian byte format, which is a type of format for byte storage.  Some CPU's read bytes as big-endian and some as little-endian.  Typically, the big-endian format is used by non-Intel processors, while Intel processors use little-endian.  This byte order should make it work no matter what, however if you are getting getting numbers that aren't 60000, 10000, or 28 for the number of integers or image dimensions, try switching the byte order the other way by changing the '>' to a '<'.
 
     self.image_magic_number = np.frombuffer(image_file.read(4), dtype=reorder_type)[0]
     self.num_images = np.frombuffer(image_file.read(4), dtype=reorder_type)[0]
@@ -242,7 +242,7 @@ Now we are going to read all the image data from the file into a temporary varia
 
     self.images = np.frombuffer(buffer, dtype = np.uint8).astype(np.float32)
 
-This line now reads all the data from the buffer variable as unsigned ints (np.unit8) and stores them into a numpy array as 32-bit floats (np.float32).  We are using floats as Pytorch neural networks, at least the linear ones we'll be using, expect floats rather than double or ints.  This is now our set of image data.  Currently the data is stored as as really long one-dimensional set of numbers.  To see this, you can add print(self.images.shape) like so:
+This line now reads all the data from the buffer variable as unsigned ints (np.uint8) and stores them into a numpy array as 32-bit floats (np.float32).  We are using floats as Pytorch neural networks, at least the linear ones we'll be using, expect floats rather than double or ints.  This is now our set of image data.  Currently the data is stored as as really long one-dimensional set of numbers.  To see this, you can add print(self.images.shape) like so:
 
     self.images = np.frombuffer(buffer, dtype = np.uint8).astype(np.float32)
     print(self.images.shape)
@@ -251,7 +251,7 @@ and run the program. You'll get an error, but if you check above it said error, 
 
     self.images = np.reshape(self.images, (self.num_images, 784))
 
-Here we reshape that long, one-dimensional set of numbers into a set of individual images.  np.reshape takes as arguments the numpy array you're modifying, and then a tuple of the dimensions you want the new one to be.  It then returns the newly reshaped array.  Thus we are reshaping self.images (the first argument) and changing its dimensions to 60000x784 (the second argument).  784 is the number of pixels in the rows and columns (28x28=784) for each image.  As we will be making a feedforward neural network, we want the images in this set to be in a flattened state of 784 bytes.  This is because we will feed the set of bytes into the neural network rather than have it look at the whole "image". 
+Here we reshape that long, one-dimensional set of numbers into a set of individual images.  np.reshape takes as arguments the numpy array you're modifying, and then a tuple of the dimensions you want the new one to be.  It then returns the newly reshaped array.  Thus we are reshaping self.images (the first argument) and changing its dimensions to 60000x784 (the second argument).  784 is the total number of pixels in the rows and columns (28x28=784) for each image.  As we will be making a feedforward neural network, we want the images in this set to be in a flattened state of 784 bytes.  This is because we will feed the set of bytes into the neural network rather than have it look at the whole "image". 
 
     self.images = self.images/255
 
@@ -299,7 +299,7 @@ Next, we directly get the image from the set using the image_idx and then save i
 
 We then print the dimensions of the image by getting its shape (as shown before when we did it with the image set).  
 
-Finally the last two lines involve drawing the image to the current figure using plt.imshow and then actually displying it with plt.show().  If you want to know more about it, I found [this answer](https://stackoverflow.com/a/3497922/11788566) on Stack Overflow to be quite helpful.
+Finally the last two lines involve drawing the image to the current figure using plt.imshow and then actually displaying it with plt.show().  If you want to know more about it, I found [this answer](https://stackoverflow.com/a/3497922/11788566) on Stack Overflow to be quite helpful.
 
 Now run the program and you should be able to see your first digits from MNIST!  Don't forget to uncomment self.label_init_dataset() in the \_\_init\_\_ function as we'll be dealing with that in the next section.
 
@@ -337,7 +337,7 @@ As I explained way back in the file format, the labels only have two integers in
     self.labels = np.frombuffer(buffer, dtype = np.uint8)
     self.labels = torch.tensor(self.labels, dtype = torch.long)
 
-Then we read all the labels into a variable named 'buffer' using the num_labels value we just got from the initial integers. We then read the labels from the buffer as unsigned ints but now, rather than convert them to floats like we did the image data, we will convert them to longs in the torch.tensor line by making the datatype (dtype) = long.  This time longs are expected for the labels by Pytorch rather than ints.  Keping them as ints would cause an error when we run the neural network later.
+Then we read all the labels into a variable named 'buffer' using the num_labels value we just got from the initial integers. We then read the labels from the buffer as unsigned ints but now, rather than convert them to floats like we did the image data, we will convert them to longs in the torch.tensor line by making the datatype (dtype) = long.  This time longs are expected for the labels by Pytorch rather than ints.  Keeping them as ints would cause an error when we run the neural network later.
 
 With that we are done with our dataset class and can finally move into making the neural network!  Before that though, I want to tweak the draw_image function slightly so you can test that the labels work, and then we can move into making the neural network.
 
@@ -361,7 +361,7 @@ This replaces the 'image = mnist.images[image_idx]' line from the last testing p
 
     print('Label: {}'.format(label.item()))
 
-The last change is adding this little print staement that takes the number from the label tensor (it's currently a tensor with the label in it, but by doing label.item() we can get the number itself) and print it to show that the number matches up with the image.  If the label and image do not match, you may have made a mistake somewhere.
+The last change is adding this little print statement that takes the number from the label tensor (it's currently a tensor with the label in it, but by doing label.item() we can get the number itself) and print it to show that the number matches up with the image.  If the label and image do not match, you may have made a mistake somewhere.
 
 Run this now, and hopefully it'll draw images from the training and testing set along with their corresponding label.  If it works, get ready to move into making the neural network.
 
@@ -390,7 +390,7 @@ Here is how the code should look based on what I've given you.  While I generall
             self.num_labels = 0
             self.labels = np.empty(0)
 
-            #Functions that intialize the data
+            #Functions that initialize the data
             self.image_init_dataset()
             self.label_init_dataset()
 
@@ -450,7 +450,7 @@ Here is how the code should look based on what I've given you.  While I generall
     #Testing function that draws images from the datasets based on a given index
     def draw_image(images_root, labels_root, image_idx):
         mnist = MNISTDataset(images_root, labels_root)
-        #Here, we reshape the the 1D array into a 60000x28x28x1 dimensional array.  This will allow us to be
+        #Here, we reshape the 1D array into a 60000x28x28x1 dimensional array.  This will allow us to be
         #able to pull individual images and read them
         mnist.images = np.reshape(mnist.images, (mnist.num_images, 28, 28))
         image, label = mnist.__getitem__(image_idx)
@@ -497,7 +497,7 @@ The two easy prerequisites to this are importing the neural network package for 
 
     super(NeuralNet, self).__init__()
 
-Next we use the super function to call the \_\_init\_\_ of the parent function.  The Pytorch documentation says that this is required, however I haven't found the exact reason why this is done.  Usually super is used so you can inhereit methods from the parent, but why it calls the \_\_init\_\_ directly is something I'm not sure of.
+Next we use the super function to call the \_\_init\_\_ of the parent function.  The Pytorch documentation says that this is required, however I haven't found the exact reason why this is done.  Usually super is used so you can inherit methods from the parent, but why it calls the \_\_init\_\_ directly is something I'm not sure of.
 
     self.linear1 = nn.Linear(784, 100)
     self.linear2 = nn.Linear(100, 50)
@@ -505,9 +505,9 @@ Next we use the super function to call the \_\_init\_\_ of the parent function. 
 
 Here we create the layers of our neural network to use later in the forward function.  As can be seen in the [documentation](https://pytorch.org/docs/stable/nn.html#torch.nn.Linear), the format for nn.Linear is **nn.Linear(in_features, out_features, bias = True)**.  We are leaving bias as True so we don't need to explicitly change it, but we do need to choose the in and out features.
 
-For linear layer 1, we feed in, as the in_features, all 784 pixels from the image. Then for the out_features I chose a sufficently large number of features I wanted the neural network to look for, in this case 100. 
+For linear layer 1, we feed in, as the in_features, all 784 pixels from the image. Then for the out_features I chose a sufficiently large number of features I wanted the neural network to look for, in this case 100. 
 
-For the second layer, I took the out_features from the first layer (100) and used them as the in_features here.  I then did the same thing as with the first layer and chose a sufficently large number of features to look for, in this case 50, for the out_features.  You can follow this pattern of 'this layer's out_features become the next layers in_features' to make as large of a neural network as you want.
+For the second layer, I took the out_features from the first layer (100) and used them as the in_features here.  I then did the same thing as with the first layer and chose a sufficiently large number of features to look for, in this case 50, for the out_features.  You can follow this pattern of 'this layer's out_features become the next layers in_features' to make as large of a neural network as you want.
 
 For the third layer, I used the out_features from the previous layer (50) as the in_features.  As this is the last layer, we want the  out_features for this layer to be the final output/choice of the neural network.  This is the neural network's guess as to which digit between 0-9 the image depicts.  As 0-9 gives us 10 choices, the output will be 10 out_features.  Without any abstraction, the real form of the output will be 10 numbers that increase based off the patterns the neural network has trained for.  The more patterns it sees relating to that digit, the higher the corresponding number in the output.  By choosing the highest of these 10 outputs, we get the neural network's guess.  That part will be done later, though.
 
@@ -584,12 +584,12 @@ Here we create the training and testing dataset objects using the custom dataset
     training_batch_size = 50
     test_batch_size = 1000
 
-Here we will create the batch size for the DataLoader.  Batches are, as the name implies, subsets of the full dataset that are used for training instead of training with the whole dataset at once.  By feeding in batches of samples rather than all of them, it saves on memory usage and makes learning move faster as you aren't calculating the gradient over the whole set. If you want to learn more, [this link](https://datascience.stackexchange.com/a/16818) goes into more detail.  We use batches of 50 for training as you want rather small batches when doing gradient descent and 1000 for testing as it breaks up the 10,000 more evenly.  The batch size doesn't particularly matter for testing so the choice of 1000 was rather arbitrary.  The test size of 50 is slightly abnormal as the standard is usally 32 or 64, but it shouldn't affect the results here in any signficant way.
+Here we will create the batch size for the DataLoader.  Batches are, as the name implies, subsets of the full dataset that are used for training instead of training with the whole dataset at once.  By feeding in batches of samples rather than all of them, it saves on memory usage and makes learning move faster as you aren't calculating the gradient over the whole set. If you want to learn more, [this link](https://datascience.stackexchange.com/a/16818) goes into more detail.  We use batches of 50 for training as you want rather small batches when doing gradient descent and 1000 for testing as it breaks up the 10,000 more evenly.  The batch size doesn't particularly matter for testing so the choice of 1000 was rather arbitrary.  The test size of 50 is slightly abnormal as the standard is usually 32 or 64, but it shouldn't affect the results here in any significant way.
 
     training_loader = torch.utils.data.DataLoader(training_dataset, batch_size = training_batch_size, shuffle = True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = test_batch_size, shuffle = True)
 
-These two lines handle loading the two datasets into a [Pytorch Dataloader](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader).  The reason for making the custom Pytorch Datasets is so that we could do this.  The format for the DataLoader object (that we are worried about at least) is **DataLoader(dataset, batch_size, shuffle)**.  The dataset is the custom one we created, the batch_size is what we just defined, and shuffle, when set to True, reshuffles the data every epoch.  Now we can use this dataloader to feed our dataset into the neural network, and it also shuffles the data everytime as a bonus.  Shuffling the dataset serves many purposes, but generally it helps to prevent overfitting as the order which you feed the data into the network may affect the weights of the network if the order remains static across all epochs.  For more complex info on why shuffling is good, look at [this answer](https://datascience.stackexchange.com/a/24539/79065) for the more complex explanation and the one below it for a more simple way of putting it.
+These two lines handle loading the two datasets into a [Pytorch Dataloader](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader).  The reason for making the custom Pytorch Datasets is so that we could do this.  The format for the DataLoader object (that we are worried about at least) is **DataLoader(dataset, batch_size, shuffle)**.  The dataset is the custom one we created, the batch_size is what we just defined, and shuffle, when set to True, reshuffles the data every epoch.  Now we can use this dataloader to feed our dataset into the neural network, and it also shuffles the data every time as a bonus.  Shuffling the dataset serves many purposes, but generally it helps to prevent overfitting as the order which you feed the data into the network may affect the weights of the network if the order remains static across all epochs.  For more complex info on why shuffling is good, look at [this answer](https://datascience.stackexchange.com/a/24539/79065) for the more complex explanation and the one below it for a more simple way of putting it.
 
     num_epochs = 25
 
@@ -602,25 +602,25 @@ Next we set the number of epochs.  This is simply how long we are training for. 
     test_accuracy = []
     test_losses= []
 
-Next we intilalize the neural network by creating an object of the neural network class we created in the last section.  This is our actual neural network.  The next four lines are just intializing lists for values we'll be collecting uring training and testing.  We want to be able to append the data to them as the program runs so we can display the loss and accuracy at the end.  
+Next we initialize the neural network by creating an object of the neural network class we created in the last section.  This is our actual neural network.  The next four lines are just initializing lists for values we'll be collecting uring training and testing.  We want to be able to append the data to them as the program runs so we can display the loss and accuracy at the end.  
 
     test_counter = [num * training_dataset.num_images for num in range(num_epochs + 1)]
 
-This is a list of the point for where each epoch ends.  This will later be used to plot the average loss during testing.  What is actually in the test counter variable is basically a list starting with 0 and adding the number of images in the training dataset each times.  So with 60,000 images in the training dataset, this is 0, 60000, 120000, 180000, etc.  The reason we have a 0 here is that we will do an intial test before any training is done to see how well the neural network does with random guessing (no training).
+This is a list of the point for where each epoch ends.  This will later be used to plot the average loss during testing.  What is actually in the test counter variable is a list starting with 0 and adding the number of images in the training dataset for each new number.  The total amount of numbers is equal to the number of epochs we specified plus one.  So with 60,000 images in the training dataset, this is 0, 60000, 120000, 180000, etc.  The reason we have a 0 here is that we will do an initial test before any training is done to see how well the neural network does with random guessing (no training).
 
     loss_function = nn.CrossEntropyLoss()
 
-Next we create our loss function using [Cross Entropy Loss](https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss).  The loss functon is used to evaluate how well the neural network is doing.  Cross entropy loss punishes the model more heavily for being confident in the wrong answer.  We are using it as it is quite good for classification problems.
+Next we create our loss function using [Cross Entropy Loss](https://pytorch.org/docs/stable/nn.html#torch.nn.CrossEntropyLoss).  The loss function is used to evaluate how well the neural network is doing.  Cross entropy loss punishes the model more heavily for being confident in the wrong answer.  We are using it as it is quite good for classification problems.
 
     learning_rate = .2
     
     momentum = .9
 
-Next we set the learning rate and momentum.  The learning rate affects how quickly the weights of the neural net change.  Too high of a learning rate can skip the optimal weight, well too low of one may cause the model to get stuck in a local minimum.  Due to this, it is worthwhile to test many different learning rate.  It is .2 here as I found it to be of those I tested.  Momentum is used to speed up the convergence of a neural network.  To see a picture of how it works, see [this link](https://www.quora.com/What-exactly-is-momentum-in-machine-learning).
+Next we set the learning rate and momentum.  The learning rate affects how quickly the weights of the neural net change.  Too high of a learning rate can skip the optimal weight, well too low of one may cause the model to get stuck in a local minimum.  Due to this, it is worthwhile to test many different learning rates.  It is .2 here as I found it to be of those I tested.  Momentum is used to speed up the convergence of a neural network.  To see a picture of how it works, see [this link](https://www.quora.com/What-exactly-is-momentum-in-machine-learning).
 
     optimizer = torch.optim.SGD(neural_net.parameters(), lr = learning_rate, momentum = momentum)
 
-Next we create our optimizer.  The optimzer tweaks the weights of the network in order to minimize the loss function.  This makes the model as accuracte as possible.  We are using [Stochaster Gradient Descent](https://pytorch.org/docs/stable/optim.html#torch.optim.SGD) here (SGD) which samples a subset of the data in order to determine how to change the weight.  For the arguments, it takes the parameters we want to optimize, the learning rate we just set, and the momentum we also just set.  If you want to know more about what neural_net.parameres() is, check out [this link](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/#parameters-in-depth).
+Next we create our optimizer.  The optimizer tweaks the weights of the network in order to minimize the loss function.  This makes the model as accurate as possible.  We are using [Stochastic Gradient Descent](https://pytorch.org/docs/stable/optim.html#torch.optim.SGD) here (SGD) which samples a subset of the data in order to determine how to change the weight.  For the arguments, it takes the parameters we want to optimize, the learning rate we just set, and the momentum we also just set.  If you want to know more about what neural_net.parameres() is, check out [this link](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/#parameters-in-depth).
 
     random_seed = 1
     torch.backends.cudnn.enabled = False
@@ -658,11 +658,11 @@ This loop enumerates over the dataset, batch by batch, using the dataloader. It 
 
     optimizer.zero_grad()
 
-The first thing we do for each iteration of the for loop is to zero the gradients of the optimizer.  If we do not do this, the gradients will accumulate over time, causing the gradient to point in the wrong direction, preventing correct learning.  Once we finish the network, if you comment out this line and run it, you'll find that no learning will occur adn the loss will skyrocket.  This is due to the gradient accumulation. As usual [here](https://stackoverflow.com/a/48009142/11788566) is more optional info if you want to dig a bit deeper.
+The first thing we do for each iteration of the for loop is to zero the gradients of the optimizer.  If we do not do this, the gradients will accumulate over time, causing the gradient to point in the wrong direction, preventing correct learning.  Once we finish the network, if you comment out this line and run it, you'll find that no learning will occur and the loss will skyrocket.  This is due to the gradient accumulation. As usual [here](https://stackoverflow.com/a/48009142/11788566) is more optional info if you want to dig a bit deeper.
 
     output = neural_net(images)
 
-Here we put the images in the neural network and get returned an ouput.  Assuming we are using a batch size of 50, the output is a 50x10 tensor (batch size x 10) where the guesses for each image are a 1x10 tensor (a single row, 10 values long). Each column corresponds to one of the digits we are guessing between 0 and 9.  The value in each column is the neural network's confidence in the current image being that digit.  So, for example, if the image is a 9, the output will be a tensor of the neural network's confidence in the image being a 0, 1, 2... up to 9.  The value of column 0 is the confidence in the image being a 0, the value in column 1 the confidence it is a 1, etc.  Then we can look at the values in that 1x10 tensor and determine what the guess is by finding which column has the max value (max confidence).  Hopefully it's column 9 if our image is a 9.  This will be more important with testing however, as right now we only need to put the output into the loss function.
+Here we put the images in the neural network and get returned an output.  Assuming we are using a batch size of 50, the output is a 50x10 tensor (batch size x 10) where the guesses for each image are a 1x10 tensor (a single row, 10 values long). Each column corresponds to one of the digits we are guessing between 0 and 9.  The value in each column is the neural network's confidence in the current image being that digit.  So, for example, if the image is a 9, the output will be a tensor of the neural network's confidence in the image being a 0, 1, 2... up to 9.  The value of column 0 is the confidence in the image being a 0, the value in column 1 the confidence it is a 1, etc.  Then we can look at the values in that 1x10 tensor and determine what the guess is by finding which column has the max value (max confidence).  Hopefully it's column 9 if our image is a 9.  This will be more important with testing however, as right now we only need to put the output into the loss function.
 
     loss = loss_function(output, labels)
 
@@ -670,7 +670,7 @@ Here we compute the loss using the output and labels.  We compare what guesses w
 
     loss.backward()
 
-This explanation will mainly be taken from [this Pytorch forum post](https://discuss.pytorch.org/t/what-does-the-backward-function-do/9944/2) which is a great explanation.  **loss.backward()** is used to compute the derivative **dloss/dx** for every parameter **x** which has requires_grad = True.  requires_grad is just used to flag if a parameter need a gradient computed when used. [This](https://pytorch.org/docs/stable/notes/autograd.html) is the detailed Pytorch documentaion on it.  If you don't know what gradients are, don't worry about it for now, but look them up eventually as explaining gradient descent is beyond the scope of this tutorial. Anyway, once these gradients are computed, **loss.backward()** sums them into **x.grad**.  This is then used in **optimizer.step()**, which is the next line of code.
+This explanation will mainly be taken from [this Pytorch forum post](https://discuss.pytorch.org/t/what-does-the-backward-function-do/9944/2) which is a great explanation.  **loss.backward()** is used to compute the derivative **dloss/dx** for every parameter **x** which has requires_grad = True.  requires_grad is just used to flag if a parameter need a gradient computed when used. [This](https://pytorch.org/docs/stable/notes/autograd.html) is the detailed Pytorch documentation on it.  If you don't know what gradients are, don't worry about it for now, but look them up eventually as explaining gradient descent is beyond the scope of this tutorial. Anyway, once these gradients are computed, **loss.backward()** sums them into **x.grad**.  This is then used in **optimizer.step()**, which is the next line of code.
 
     optimizer.step()
     
@@ -722,12 +722,12 @@ Section by section:
         test_loss = 0
         correct_guesses = 0
 
-We'll begin the testing function by intializing the variables for the loss and total correct guesses.  We'll be changing these throughout the function
+We'll begin the testing function by initializing the variables for the loss and total correct guesses.  We'll be changing these throughout the function
 
         with torch.no_grad():
             for images, labels in test_loader:
 
-We will now create a for loop that gets the images and labels from the testing dateloader.  The images and labels will be in batches of 1000 as we set during the intialization.  **with torch.no_grad():** is a wrapper that will temporarily see all requires_grade flags (which we talked about earlier) to False.  As we will not be computing gradients in our testing function, this will help speed it up and reduce memory usage.  In general, use **with torch.no_grad():** when you don't need to compute gradients or backpropogate.  This will almost always be used in testing functions.
+We will now create a for loop that gets the images and labels from the testing dataloader.  The images and labels will be in batches of 1000 as we set during the initialization.  **with torch.no_grad():** is a wrapper that will temporarily see all requires_grade flags (which we talked about earlier) to False.  As we will not be computing gradients in our testing function, this will help speed it up and reduce memory usage.  In general, use **with torch.no_grad():** when you don't need to compute gradients or backpropagate.  This will almost always be used in testing functions.
 
     output = neural_net(images)
 
@@ -743,7 +743,7 @@ Here we calculate the loss, get the value of it (the .item() part) and add it to
 
     correct_guesses += torch.eq(guesses, labels.data.view_as(guesses)).sum()
 
-Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (if the element in index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then if the elementn at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. The output is then a ByteTensor with a 1 at each location where the elements are the same.  By taking the sum of all the 1's in the ByteTensor, we can geet the amount of correct guesses the model made.  The view_as function works by viewing the tensor you are calling it from in the same way you view the tensor that is the input parameter (in this case viewing the labels tensor as the guesses tensor).  Doing labels.data.view_as(guesses) means that we are taking the label tensor (of Size([1000])), and viewing it as a tensor which is the same size as guesses (Size([1000, 1]).  This makes the two tensors 'broadcastable' in Pytorch, which allows us to do operations on them.
+Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (if the element at index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then if the element at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. The output is then a ByteTensor with a 1 at each location where the elements are the same.  By taking the sum of all the 1's in the ByteTensor, we can get the amount of correct guesses the model made.  The view_as function works by viewing the tensor you are calling it from in the same way you view the tensor that is the input parameter (in this case viewing the labels tensor as the guesses tensor).  Doing labels.data.view_as(guesses) means that we are taking the label tensor (of Size([1000])), and viewing it as a tensor which is the same size as guesses (Size([1000, 1]).  This makes the two tensors 'broadcastable' in Pytorch, which allows us to do operations on them.
 
     test_loss /= len(test_dataset)/test_batch_size
     test_losses.append(test_loss)
@@ -808,7 +808,7 @@ Now we're just showing our results.  We start with the number of epochs, and als
     plt.ylabel('negative log likelihood loss')
     fig
 
-This last set of function is used to graph all those previous results we stored in the lists.  First we create the figure (fig = plt.figure()).  Next we plot the training loss, testing loss, and testing accuracy.  The training loss is plotted with a lines as it changes more frequently, while the testing loss and accuracy are plotted on scatter plot as they appear less frequently.  If you see me using the **zorder** in the plot and scatter functions, that is to set how the drawing height of the plotted values.  As training loss takes up the most space, we want that on the bottom (zorder = 1).  As testing loss and accuracy aren't graphed as often, we want them more visible, so we put them on zorder 2 and 3.  We then create a legend explaining the graphed values, as well as label the axes.  Fianlly, we draw the figure by calling **fig**.
+This last set of function is used to graph all those previous results we stored in the lists.  First we create the figure (fig = plt.figure()).  Next we plot the training loss, testing loss, and testing accuracy.  The training loss is plotted with a lines as it changes more frequently, while the testing loss and accuracy are plotted on scatter plot as they appear less frequently.  If you see me using the **zorder** in the plot and scatter functions, that is to set how the drawing height of the plotted values.  As training loss takes up the most space, we want that on the bottom (zorder = 1).  As testing loss and accuracy aren't graphed as often, we want them more visible, so we put them on zorder 2 and 3.  We then create a legend explaining the graphed values, as well as label the axes.  Finally, we draw the figure by calling **fig**.
 
 And with that, we are done!  You should now have your first working neural network!
 
@@ -848,7 +848,7 @@ Here is how the final code should look based on what we've made so far.  I've al
 
     #This creates a list with the point for where each epoch ends.  This will later be used to plot the average loss
     #during testing  It's num_epochs + 1 because it will also make a point for when no training has been done and 
-    #the weights are just random.  You would remove the +1 if you did not do an intial test
+    #the weights are just random.  You would remove the +1 if you did not do an initial test
     test_counter = [num * training_dataset.num_images for num in range(num_epochs + 1)]
 
     #The loss function is created. The loss function evaluates how well the neural network is doing
@@ -859,7 +859,7 @@ Here is how the final code should look based on what we've made so far.  I've al
     #the model skip the optimal value, while too low may make the model get stuck in a local minimum
     learning_rate = .2
     
-    #Momentum in sotchastic gradient descent
+    #Momentum in stochastic gradient descent
     momentum = .9
     
     #The optimizer tweaks the weights of the network in order to minimize the loss function.  This makes the 
@@ -873,7 +873,7 @@ Here is how the final code should look based on what we've made so far.  I've al
     torch.manual_seed(random_seed)
 
 
-    #This is the traing function.
+    #This is the training function.
     def train(epoch):
         #For loop that enumerates over the training loader.  It has a batch index and gets out the images and labels
         for batch_idx, (images, labels) in enumerate(training_loader):
@@ -926,10 +926,10 @@ Here is how the final code should look based on what we've made so far.  I've al
         correct_guesses = 0
         #This wrapper will temporarily set all requires_grad flags to false.  As we know we will not be computing 
         #gradients in our testing function, this will help speed it up and reduce memory usage.  Use torch.no_grad()
-        #when you do not need to compute gradients or backpropogate.  Almost always should be used in testing functions
+        #when you do not need to compute gradients or backpropagate.  Almost always should be used in testing functions
         with torch.no_grad():
             #for loop that gets the images and labels from the test loader.  Images are in batches of 1000 as set during
-            #the intialization of the dataloader
+            #the initialization of the dataloader
             for images, labels in test_loader:
                 #We get the model's guesses for what the images in the batch are
                 output = neural_net(images)
@@ -956,7 +956,7 @@ Here is how the final code should look based on what we've made so far.  I've al
                     100. * current_accuracy))
 
     if __name__ == "__main__":
-        #This does an intial test of the model when all the weights are random.  This is the intial test mentioned in the
+        #This does an initial test of the model when all the weights are random.  This is the initial test mentioned in the
         #comment for test_counter
         test()
         #This for loop tests for the number of epochs we want.  As it starts at 1, we do the number of epochs + 1
@@ -991,9 +991,3 @@ Some acknowledgements:
 * I would very much like to thank the great people at the Rochester Data Science Consortium as I created this tutorial while interning with them.  Please feel free to check out their website: [http://rocdatascience.com/](http://rocdatascience.com/).
 
 * This tutorial was the combination of knowledge from many tutorials, most significantly from [this tutorial on creating neural networks in Pytorch](https://nextjournal.com/gkoehler/pytorch-mnist) by Gregor Koehler, but also [this series of articles on deep learning for rookies](https://towardsdatascience.com/introducing-deep-learning-and-neural-networks-deep-learning-for-rookies-1-bd68f9cf5883) by Nahua Kang, [this online book on neural networks and deep learning](http://neuralnetworksanddeeplearning.com/) by Michael Nielsen, [this open source tutorial](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/) on Deep Learning Wizard, and, lastly, [this tutorial on building Pytorch Datasets](https://towardsdatascience.com/building-efficient-custom-datasets-in-pytorch-2563b946fd9f) by Syafiq Kamarul Azman.
-
-
-
-
-
-
