@@ -2,11 +2,11 @@
 
 This tutorial will cover creating a custom Pytorch Dataset with the MNIST dataset and using it to train a basic feedforward neural network in Pytorch.  There will be four main parts: extracting the MNIST data into a useable form, creating the neural network itself, training the network, and, lastly, testing it.
 
-This tutorial was created to be in-depth enough that even people with very little experience could understand it.  Many tutorial focus on *what* they did, not *why* they did it.  I try to delve more deeply into the *why* aspect, but due to that the tutorial is a little lengthy.  I will generally put my code at the beginning of each section, so if you feel you understand it, feel free not to read the more in-depth line by line explanations unless you feel you need them.  When doing a tutorial I'd rather err on the side of overexplaining than not.
+This tutorial was created to be in-depth, but at a high enough level that even people with very little experience could understand it.  Many tutorials focus on *what* they did, not *why* they did it.  I try to delve more deeply into the *why* aspect, but due to that the tutorial is a little lengthy.  I will generally put my code at the beginning of each section, so, if you believe you understand it, feel free not to read the more in-depth line by line explanations unless you feel you need them.  When creating a tutorial I'd rather err on the side of overexplaining than not explaining enough.
 
 ## Introduction
 
-Pytorch is a dataset of handwritten digits, often considered the 'Hello world!' of machine learning.  It is composed of 70,000 images, which are further split into 60,000 images designated for training neural networks and 10,000 designated for testing them.  Each image is of the size 28x28 pixels and depicts a number from 0-9.  While many tutorials for MNIST use a set that has already been preprocessed, this one will cover how to load the set from the raw files.  This method was chosen to give more experience with loading actual datasets, as most real world data is not neatly processed for you.  With that said, let's begin!
+Pytorch is a dataset of handwritten digits, often considered the 'Hello, World!' of machine learning.  It is composed of 70,000 total images, which are split into 60,000 images designated for training neural networks and 10,000 designated for testing them.  Each image is of the size 28x28 pixels and depicts a number from 0-9.  While many tutorials for MNIST use a set that has already been preprocessed, this one will cover how to load the set from the raw files.  This method was chosen to give more experience with loading actual datasets, as most real world data is not neatly processed for you.  With that said, let's begin!
 
 ### What You Need
 Installing the following programs/packages can be difficult for a beginner.  I'll try to point you in the right direction, but if you are having trouble then you should look up more in-depth tutorials on that specific topic online before moving forward.
@@ -854,16 +854,17 @@ Here is how the final code should look based on what we've made so far.  I've al
     #The loss function is created. The loss function evaluates how well the neural network is doing
     #We use Cross Entropy Loss as it punishes the model more heavily for being confident in a wrong answer.  
     loss_function = nn.CrossEntropyLoss()
+    
     #The learning rate is how quickly the weights of the neural net change.  Too high of a learning rate may make
     #the model skip the optimal value, while too low may make the model get stuck in a local minimum
     learning_rate = .2
+    
     #Momentum in sotchastic gradient descent
     momentum = .9
+    
     #The optimizer tweaks the weights of the network in order to minimize the loss function.  This makes the 
     #model as accurate as possible.  Here we are using Stochastic Gradient Descent, which samples a subset
     #of the data to determine how to change the weights.
-    #neural_net.parameters() - Look for the "Parameters In-Depth" heading here: 
-    #https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/#parameters-in-depth
     optimizer = torch.optim.SGD(neural_net.parameters(), lr = learning_rate, momentum = momentum)
 
     #Sets the seed for randomization manually so that results can be reproducible during testing
@@ -896,6 +897,7 @@ Here is how the final code should look based on what we've made so far.  I've al
             #loss.backward() calculates the gradients for every parameter in your model with requires_grad = True
             #Once the gradients are accumulated, they can then be used by the optimizer to update the parameters
             loss.backward()
+            
             #optimizer.step() is where the values of the parameters are updated using the gradients computed in
             #loss.backward().  This is more or less where the training occurs
             optimizer.step()
@@ -933,23 +935,10 @@ Here is how the final code should look based on what we've made so far.  I've al
                 output = neural_net(images)
                 #This adds up the loss for each batch of the test run
                 test_loss += loss_function(output, labels).item()
-                #As the output is a test_batch_sizex10 (1000x10 if this code is unmodified) tensor, each image is 
-                #a 1x10 tensor with each of the 10 values corresponding to the model's confidence in the image being
-                #the value's respective number from 0-9.  Ex: the value of index 0 of the 1x10 tensor corresponds to the 
-                #confidence that the image is 0, while the value of index 1 corresponds to the confidence in it being 1, etc.
-                #Thus, the index of the number with the highest confidence (maximum value) is the model's guess, which we want.
-                #The return type of torch.max is a tuple of (values, indices) where values is the max value of each row
-                #and indices is the index of each max value.  By getting [1] of this tuple, we are getting the indices of
-                #the max values, which correspond to the guess of the digits, as explained in the example above.
+                #Gets the guesses from the neural network by taking the max values from the output
                 guesses = torch.max(output, 1, keepdim = True)[1]
-                #torch.eq computes element-wise equality for two tensors, meaning that it checks each element in the 
-                #input tensor (guesses) againt it's respective element in the other tensor (labels).  It then outputs a 
-                #ByteTensor with a 1 at each location where the comparisons are true.  By taking the sum of all the 1's
-                #in the ByteTensor, we can get the amount of correct guesses the model made.
-                #The view_as function works by viewing the tensor as the same size as the input tensor.  So doing
-                #labels.data.view_as(guesses) means that we are going to the labels tensor (of Size([1000])), and 
-                #view it as a tensor or the same size as guesses (Size([1000, 1]).  This makes the two tensors
-                #'broadcastable' in pytorch, which allows us to do operations on them
+                #By comparing the guesses to the labels we are able to get the correct guesses. We then take the sum of
+                #of the correct guesses to get the total amount of correct guesses
                 correct_guesses += torch.eq(guesses, labels.data.view_as(guesses)).sum()
             #The test_loss was summed throughout the test, and is now averaged by dividing it by the length of the dataset
             #over the size of the test batches.  In simpler terms, this is the combined loss of all batches divided by
@@ -995,5 +984,16 @@ Here is how the final code should look based on what we've made so far.  I've al
         plt.ylabel('negative log likelihood loss')
         fig
 
-Final Conclusions and Acknowledgments
+## Final Conclusions and Acknowledgments
+I hope this tutorial helped you understand how to load data and create neural networks in Pytorch, as well as see how the two are related.  This was my first tutorial so, if there are any issues, please email me at **michael.pirrall@gmail.com**.  I'd also appreciate any feedback or questions you may have.  Thanks for using this tutorial and good luck moving forward with neural networks and data science!
+
+Some acknowledgements:
+* I would very much like to thank the great people at the Rochester Data Science Consortium as I created this tutorial while interning with them.  Please feel free to check out their website: [http://rocdatascience.com/](http://rocdatascience.com/).
+
+* This tutorial was the combination of knowledge from many tutorials, most significantly from [this tutorial on creating neural networks in Pytorch](https://nextjournal.com/gkoehler/pytorch-mnist) by Gregor Koehler, but also [this series of articles on deep learning for rookies](https://towardsdatascience.com/introducing-deep-learning-and-neural-networks-deep-learning-for-rookies-1-bd68f9cf5883) by Nahua Kang, [this online book on neural networks and deep learning](http://neuralnetworksanddeeplearning.com/) by Michael Nielsen, [this open source tutorial](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/) on Deep Learning Wizard, and, lastly, [this tutorial on building Pytorch Datasets](https://towardsdatascience.com/building-efficient-custom-datasets-in-pytorch-2563b946fd9f) by Syafiq Kamarul Azman.
+
+
+
+
+
 
