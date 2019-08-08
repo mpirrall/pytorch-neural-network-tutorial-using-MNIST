@@ -1,5 +1,5 @@
-#The MNIST dataset is composed of a long series of bits.  For the image sets, the first 16 bits give non-image data
-#For the label sets, the first 8 bits are non-label data
+#This code was partly inspired by Syafiq Kamarul Azman's article on datasets here: 
+#https://towardsdatascience.com/building-efficient-custom-datasets-in-pytorch-2563b946fd9f
 
 from torch.utils.data import Dataset
 import gzip

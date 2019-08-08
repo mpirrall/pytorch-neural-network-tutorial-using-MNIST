@@ -1,3 +1,4 @@
+#A good portion of this class was modified from code in Gregor Koehler's article here: https://nextjournal.com/gkoehler/pytorch-mnist
 
 from NeuralNetwork import NeuralNet
 from MNISTDataset import MNISTDataset
