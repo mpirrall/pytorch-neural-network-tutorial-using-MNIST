@@ -55,7 +55,7 @@ To make our class a subclass of the Pytorch Dataset class (extending it) we must
 
     class MNISTDataset(Dataset):
     
-With that one, we must now create the \_\_init\_\_, \_\_len\_\_, and \_\_getitem\_\_ functions for the Dataset class.  Overriding \_\_len\_\_ and \_\_getitem\_\_ is necessary in all child classes of the Pytorch Dataset class as that is what will be called by the Pytorch Dataloader to get values from the dataset.
+With that done, we must now create the \_\_init\_\_, \_\_len\_\_, and \_\_getitem\_\_ functions for the Dataset class.  Overriding \_\_len\_\_ and \_\_getitem\_\_ is necessary in all child classes of the Pytorch Dataset class as that is what will be called by the Pytorch Dataloader to get values from the dataset.
 
 ### Dataset - \_\_init\_\_
 The init is the constructor for our dataset class.  As the training and testing sets each have a set of images and a set of corresponding labels, we will take the root (file location) of the image set and label set as arguments:
