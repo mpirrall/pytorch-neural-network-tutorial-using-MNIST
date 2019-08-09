@@ -584,16 +584,18 @@ This explanation will mainly be taken from [this great Pytorch forum post](https
                 epoch, batch_idx * training_batch_size, len(training_dataset),
                 100 * batch_idx / len(training_loader), loss.item()))
         train_losses.append(loss.item())
+        
+        #Append the index of the current image
         train_counter.append((batch_idx * training_batch_size) + ((epoch - 1) * len(training_dataset)))
 
-This last section for the training function is just a print statement so you can see how training is progressing.  It triggers every 5000 images as batch_idx (which increments by 1) % 100 is only equal to 0 every 100 batches and 100 x 50 (the batch size) = 5000.  As you probably know, when using .format, the {} each take a variable.  The format of this is basically telling you what epoch you are at (epoch), what the current value is (batch_idx * training_batch_size) out of the total length of the set(len(training__dataset)), the percentage you are through the current epoch (calculated by dividing the current batch index by the total batches in the loader), and then the loss for this batch.  
+This last section for the training function is just a print statement to show you how training is progressing.  It triggers every 5000 images as batch_idx (which increments by 1) % 100 is only equal to 0 every 100 batches and 100 x 50 (the batch size) = 5000.  As you probably know, when using .format, the {} each take a variable.  The format of this is basically telling you what epoch you are at (epoch), what the current image index is (batch_idx * training_batch_size) out of the total length of the set(len(training__dataset)), the percentage you are through the current epoch (calculated by dividing the current batch index by the total batches in the loader), and then the loss for this batch.  
 
-We then append the loss to the list of training loss values as well as the index of the current image we are at multiplied by the total epochs.  This gives an index of te current image out of the entire training process.  For the current image, (batch_idx * training_batch_size) is how far we are in the current epoch and ((epoch - 1) * len(training_dataset)) is how many values we've gone through with the previous epochs.  Add them together and you have current values + previous values = total values gone so far.  We will use these two lists later to graph the training loss.
+We then append the current training loss value (loss.item()) to the list of all training loss values (train_losses).  To be able to match up the loss value to where it occurred, we also have to store the index of the current image as well.  For the current image, (batch_idx * training_batch_size) is how far we are in the current epoch and ((epoch - 1) * len(training_dataset)) is how many values we've gone through with the previous epochs.  Add them together and you have current values + previous values = total values used to train so far.  We will use these two lists later to graph the training loss.
 
-With that we have finished the testing function.  Now we just need to finish the testing function and the main and we'll be done!
+With that we have finished the training function.  Now we just need to finish the testing function and the main and we'll be done!
 
 ### Training and Testing - Making the Testing Function
-Now we are creating the testing function which will be used to actually test our neural network as its training.  If the training function is built correctly, we'll hopefully get good results!  Here's the code for this section:
+Now we are creating the testing function which will be used to actually test our neural network as it's training.  If the training function is built correctly, we'll hopefully get good results!  Here's the code for this section:
 
     def test():
         test_loss = 0
@@ -625,12 +627,12 @@ Section by section:
         test_loss = 0
         correct_guesses = 0
 
-We'll begin the testing function by initializing the variables for the loss and total correct guesses.  We'll be changing these throughout the function
+We'll begin the testing function by initializing the variables for the loss and total correct guesses.  We'll be changing these throughout the function.
 
         with torch.no_grad():
             for images, labels in test_loader:
 
-We will now create a for loop that gets the images and labels from the testing dataloader.  The images and labels will be in batches of 1000 as we set during the initialization.  **with torch.no_grad():** is a wrapper that will temporarily see all requires_grade flags (which we talked about earlier) to False.  As we will not be computing gradients in our testing function, this will help speed it up and reduce memory usage.  In general, use **with torch.no_grad():** when you don't need to compute gradients or backpropagate.  This will almost always be used in testing functions.
+We will now create a for loop that gets the images and labels from the testing dataloader.  The images and labels will be in batches of 1000, which we set as parameters earlier.  **with torch.no_grad():** is a wrapper that will temporarily set all **requires_grad** flags (which we talked about earlier) to False.  As we will not be computing gradients in our testing function, this will help speed it up and reduce memory usage.  In general, use **with torch.no_grad():** when you don't need to compute gradients or backpropagate.  This will almost always be used in testing functions.
 
     output = neural_net(images)
 
@@ -638,20 +640,20 @@ This line does the same thing as the identical line in the training set.  Look t
 
     test_loss += loss_function(output, labels).item()
 
-Here we calculate the loss, get the value of it (the .item() part) and add it to the total test_loss.  
+Here we calculate the loss, get the value of it (the .item() part), and add it to the total test_loss.  We're summing it here because we are just going to get one value for the average loss later
 
     guesses = torch.max(output, 1, keepdim = True)[1]
 
-**guesses** here is more or less explained in the explanation for **output = neural_net(images)** in the training function we just did.  I'd recommend rereading that if you don't understand this part.  Here we are getting the max values from each of the ten columns in the output.  These max values are the neural network's guesses for each image.  We are using the [torch.max](https://pytorch.org/docs/stable/torch.html#torch.max) function here, which finds the maximum value of the elements in the input tensor (here we are inputting **output**).  The [1] here gets us the indices of the max values rather than the max values themselves, which correspond to the guess of the digit (the column) rather than the actual value of the confidence from the neural network, which would be just some meaningless number or decimal to us. As an example, the confidence (which would be [0]) for the highest column, column 2, may be 1.7891... while the column index is just 2.  We want the 2 as the guess, not the 1.7891...  You can check this later by printing **guesses** after replacing [1] with [0].  
+**guesses** here is more or less explained in the explanation for **output = neural_net(images)** in the training function we just did.  I'd recommend rereading that if you don't understand this part.  Here we are getting the max values from each of the ten columns in the output.  These max values are the neural network's guesses for each image.  We are using the [torch.max](https://pytorch.org/docs/stable/torch.html#torch.max) function here, which finds the maximum value of the elements in the input tensor (here we are inputting **output**).  The [1] here gets us the indices of the max values rather than the max values themselves. The indices correspond to the guess of the digit (the column) rather than the actual value of the confidence from the neural network, which would just be some meaningless number or decimal to us. As an example, the confidence (which would be [0]) for the highest column, let's say column 2, may be 1.7891... while the column index is just 2.  We want the index, 2, as the guess, not the 1.7891...  You can check this later by printing **guesses** after replacing [1] with [0].  You'll just get a bunch of decimals rather than numbers.
 
     correct_guesses += torch.eq(guesses, labels.data.view_as(guesses)).sum()
 
-Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (if the element at index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then if the element at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. The output is then a ByteTensor with a 1 at each location where the elements are the same.  By taking the sum of all the 1's in the ByteTensor, we can get the amount of correct guesses the model made.  The view_as function works by viewing the tensor you are calling it from in the same way you view the tensor that is the input parameter (in this case viewing the labels tensor as the guesses tensor).  Doing labels.data.view_as(guesses) means that we are taking the label tensor (of Size([1000])), and viewing it as a tensor which is the same size as guesses (Size([1000, 1]).  This makes the two tensors 'broadcastable' in Pytorch, which allows us to do operations on them.
+Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (checks if the element at index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then checks if the element at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. The output is then a ByteTensor (basically a list of 0's or 1's) with a 1 at each location where the elements are the same.  By taking the sum of all the 1's in the ByteTensor, we can get the amount of correct guesses the model made.  The view_as function works by changing the dimensions of the tensor you are calling it from to be the same as the input tensor (in this case changing the dimensions of the labels tensor to be the same as the guesses tensor).  Doing labels.data.view_as(guesses) means that we are taking the labels tensor (of Size([1000])), and viewing it as a tensor which is the same dimensions as guesses (Size([1000, 1]). Thus the labels tensor becomes size([1000, 1]) for the course of the operation.  This makes the two tensors 'broadcastable' in Pytorch, which allows us to do operations on them.
 
     test_loss /= len(test_dataset)/test_batch_size
     test_losses.append(test_loss)
 
-As we summed the test_loss throughout the test, we now will average it by dividing it by the length of the dataset over the size of the test batches (in this case 10000/1000 = 10).  Basically the test_loss is the sum of the loss from each batch, and the length of the dataset over the size of the test batches gives the total amount of test batches.  The reason we take the average test loss here rather than the loss for each batch is that we only want one number for the loss. We then append this loss to the list of test losses to plot on a graph later. 
+As we are not our of the for loop, we will get the average of the test_loss that we summed throughout the test. To do this, we will divide the test_loss by the amount of batches (length of the dataset divided by test batches, in this case 10000/1000 = 10).  The test_loss is the sum of the loss from each batch, and the length of the dataset divided by the size of the test batches gives the total amount of test batches.  The reason we take the average test loss here, rather than the individual loss for each batch, is that we only care about how the last training epoch affected the testing.  The loss during betwen batches during testing does not matter, it's the testing loss after each training epoch that does. We then append this loss to the list of test losses to plot on a graph later. 
 
     current_accuracy = float(correct_guesses)/float(len(test_loader.dataset))
     test_accuracy.append(current_accuracy)
@@ -662,9 +664,9 @@ We do a similar thing here in that we calculate the accuracy for this test set b
             test_loss, correct_guesses, len(dataset),
             100. * current_accuracy))
 
-This last print statement is used to show the results of this testing run, similar to what is done with training.  We print the loss, total correct guesses, length of the dataset, and the accuracy.  When printed, this will display the loss and the amount correct out of the total for that test run.
+This last print statement is used to show the results of this testing run, similar to what is done with training.  We print the loss, total correct guesses, length of the dataset, and the accuracy.  When printed, this will display the loss and amount correct out of the total for that test run.
 
-Now we are done the testing function.  Now we just do a couple lines for the main and we're done!
+Now we are done the testing function.  We just need to do a couple lines for the main and we're done!
 
 ### Training and Testing - Making the Main
 Here we will create the main that will actually run the program.  Here's the code:
@@ -695,7 +697,7 @@ Section by section:
             train(epoch)
             test()
 
-Here we use the if \_\_name\_\_ == "\_\_main\_\_" format we discussed before during the Dataset class.  The next thing we do is run an initial test with the randomized weights (the test() outside the loop).  Once that is done, we move into the loop of training and testing. The epoch is increased by the for loop, and we just alternate through calling the training and testing functions for as many epochs as we defined earlier.  We use num_epochs + 1 as we start at epoch 1 and the range function gives the numbers leading up to the second argument except for that number itself.  So if we chose 3 epochs, if we use range(1,3) it would return the list [1, 2] rather than [1, 2, 3].  Thus we need to do +1.
+Here we use the if \_\_name\_\_ == "\_\_main\_\_" format we discussed before during the Dataset class.  The next thing we do is run an initial test with no training and randomized weights (the test() outside the loop).  Once that is done, we move into the loop of training and testing. The epoch is increased by the for loop, and we just alternate through calling the training and testing functions for as many epochs as we defined earlier.  We use num_epochs + 1 as we start at epoch 1 and the range function creates a list of numbers starting at 1 and then up to num_epochs+1 except for num_epochs+1 itself.  So if we chose 3 epochs, if we used range(1,3) (range(1, num_epochs)) it would return the list [1, 2] rather than [1, 2, 3].  Thus we need to do +1 to get [1, 2, 3].
 
     print('Total epochs: {}'.format(num_epochs))
     print('Max Accuracy is: {}%'.format(round(100*max(test_accuracy), 2)))
@@ -711,7 +713,7 @@ Now we're just showing our results.  We start with the number of epochs, and als
     plt.ylabel('negative log likelihood loss')
     fig
 
-This last set of function is used to graph all those previous results we stored in the lists.  First we create the figure (fig = plt.figure()).  Next we plot the training loss, testing loss, and testing accuracy.  The training loss is plotted with a lines as it changes more frequently, while the testing loss and accuracy are plotted on scatter plot as they appear less frequently.  If you see me using the **zorder** in the plot and scatter functions, that is to set how the drawing height of the plotted values.  As training loss takes up the most space, we want that on the bottom (zorder = 1).  As testing loss and accuracy aren't graphed as often, we want them more visible, so we put them on zorder 2 and 3.  We then create a legend explaining the graphed values, as well as label the axes.  Finally, we draw the figure by calling **fig**.
+This last set of functions are used to graph all those previous results we stored in the lists.  First we create the figure (fig = plt.figure()).  Next we plot the training loss, testing loss, and testing accuracy.  The training loss is plotted with lines as it changes more frequently, while the testing loss and accuracy are plotted on scatter plot as they appear less frequently.  Using **zorder** in the plot and scatter functions sets the drawing height of the plotted values.  As training loss takes up the most space, we want that on the bottom (zorder = 1).  As testing loss and accuracy aren't graphed as often, we want them more visible, so we put them on zorder 2 and 3.  We then create a legend explaining the graphed values, as well as labeling the axes.  Finally, we draw the figure by calling **fig**.
 
 And with that, we are done!  You should now have your first working neural network!
 
@@ -719,7 +721,7 @@ And with that, we are done!  You should now have your first working neural netwo
 If you want to compare your code to the final code, check **main.py** in the above repository.
 
 ## Final Conclusions and Acknowledgments
-I hope this tutorial helped you understand how to load data and create neural networks in Pytorch, as well as see how the two are related.  This was my first tutorial so, if there are any issues, please email me at **michael.pirrall@gmail.com**.  I'd also appreciate any feedback or questions you may have.  Thanks for using this tutorial and good luck moving forward with neural networks and data science!
+I hope this tutorial helped you understand how to load data and create neural networks in Pytorch, as well as see how the two are related.  This was my first tutorial, so, if there are any issues, please email me at **michael.pirrall@gmail.com**.  I'd also appreciate any feedback or questions you may have.  Thanks for using this tutorial and good luck moving forward with neural networks and data science!
 
 Some acknowledgements:
 * I would very much like to thank the great people at the Rochester Data Science Consortium as I created this tutorial while interning with them.  Please feel free to check out their website: [http://rocdatascience.com/](http://rocdatascience.com/).
