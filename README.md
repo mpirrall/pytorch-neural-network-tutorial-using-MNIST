@@ -1,12 +1,12 @@
-# Pytorch Neural Network and Dataset Tutorial Using MNIST
+# PyTorch Neural Network and Dataset Tutorial Using MNIST
 
-This tutorial will cover creating a custom Pytorch Dataset with MNIST and using it to train a basic feedforward neural network in Pytorch.  There will be four main parts: extracting the MNIST data into a useable form, creating the neural network itself, training the network, and, lastly, testing it.
+This tutorial will cover creating a custom Dataset class in PyTorch and using it to train a basic feedforward neural network, also in PyTorch.  We will be using the MNIST dataset for our sample data.  There will be four main parts: extracting the MNIST data into a useable form, extending the PyTorch Dataset class, creating the neural network itself, and, lastly, training and testing it.
 
 This tutorial is meant to be in-depth, but at a high enough level that even people with very little experience can understand it.  Many tutorials focus on *what* they did, not *why* they did it.  I try to delve more deeply into the *why* aspect, but, due to that, the tutorial is a little lengthy.  I will generally put my code at the beginning of each section, so, if you believe you understand it, feel free not to read the more in-depth line by line explanations unless you feel you need them.  When creating a tutorial I prefer to err on the side of overexplaining than not explaining enough.
 
 ## Introduction
 
-Pytorch is a dataset of handwritten digits, often considered the 'Hello, World!' of machine learning.  It is composed of 70,000 total images, which are split into 60,000 images designated for training neural networks and 10,000 for testing them.  Each image is 28x28 pixels and depicts a number from 0-9.  While many tutorials for MNIST use a set that has already been preprocessed, this one will cover how to load the set from the raw files.  This method was chosen to give more experience with loading actual datasets, as most real world data is not neatly processed for you.  With that said, let's begin!
+PyTorch is a dataset of handwritten digits, often considered the 'Hello, World!' of machine learning.  It is composed of 70,000 total images, which are split into 60,000 images designated for training neural networks and 10,000 for testing them.  Each image is 28x28 pixels and depicts a number from 0-9.  While many tutorials for MNIST use a set that has already been preprocessed, this one will cover how to load the set from the raw files.  This method was chosen to give more experience with loading actual datasets, as most real world data is not neatly processed for you.  With that said, let's begin!
 
 ### What You Need
 Installing the following programs/packages can be difficult for a beginner.  I'll try to point you in the right direction, but if you are having trouble then you should look up tutorials specific to that program/package to help you move forward.
@@ -17,7 +17,7 @@ Anaconda and a console emulator:
 * If you're on Windows and need a console emulator to work with Anaconda, I'd highly recommend [Cmder](https://cmder.net/).
 
 Once you have Anaconda installed, you'll need the following packages:
-* [Pytorch](https://pytorch.org/) - Scroll down and customize based on your system.  Choose *Conda* as you are using Anaconda, and if you don't know what CUDA is, choose *None*.  Run what you're given in your console (Cmder if you chose to use it) to download Pytorch.
+* [PyTorch](https://pytorch.org/) - Scroll down and customize based on your system.  Choose *Conda* as you are using Anaconda, and if you don't know what CUDA is, choose *None*.  Run what you're given in your console (Cmder if you chose to use it) to download PyTorch.
 * [Matplotlib](https://anaconda.org/conda-forge/matplotlib)- Follow the link and run one of the commands in console.
 * Numpy- You shouldn't actually need to install this as it should come with Anaconda.
 
@@ -30,7 +30,7 @@ MNIST:
 With that finished, we should be ready to code!
 
 ## Creating the Dataset
-We'll begin by creating the custom Pytorch Dataset that will hold the MNIST data.  Call it **MNISTDataset.py**.  This class will be general enough that it can be used for both the training data and testing data.  The Dataset class from Pytorch is used so that we can put the dataset into a Pytorch DataLoader, which will then be able to feed the data into our neural network.  I know it sounds complicated, but it will make sense once you see it implemented.
+We'll begin by creating the custom PyTorch Dataset that will hold the MNIST data.  Call it **MNISTDataset.py**.  This class will be general enough that it can be used for both the training data and testing data.  The Dataset class from PyTorch is used so that we can put the dataset into a PyTorch DataLoader, which will then be able to feed the data into our neural network.  I know it sounds complicated, but it will make sense once you see it implemented.
 
 ### Dataset - Imports
 First, we have to import all the packages we'll need for this class:
@@ -42,7 +42,7 @@ First, we have to import all the packages we'll need for this class:
     import matplotlib.pyplot as plt
 
 Package descriptions:
-* The Dataset class is what we will be extending to create our own custom Dataset.  As mentioned before, by extending this class to make our own, we will be able to feed this Dataset into the Pytorch DataLoader class, which will make training much easier.
+* The Dataset class is what we will be extending to create our own custom Dataset.  As mentioned before, by extending this class to make our own, we will be able to feed this Dataset into the PyTorch DataLoader class, which will make training much easier.
 * gzip will be used to unzip the MNIST files you downloaded earlier.  As you may have noticed, they are all .gz files, which is the extension for files compressed by gzip.
 * numpy is great for making multidimensional arrays and just holding data in general.  It's better than using the Python Lists as it uses less memory and is faster with calculations, as well as making it easy to change the dimensions of the data.
 * torch will be used for this class to turn the data from numpy arrays into tensors, which is the format neural networks use for data.
@@ -51,11 +51,11 @@ Package descriptions:
 Now that the packages are imported, we can move into actually creating our custom Dataset!
 
 ### Dataset - Extending Dataset
-To make our class a subclass of the Pytorch Dataset class (extending it) we must put it within the class parentheses like so:
+To make our class a subclass of the PyTorch Dataset class (extending it) we must put it within the class parentheses like so:
 
     class MNISTDataset(Dataset):
     
-With that done, we must now create the \_\_init\_\_, \_\_len\_\_, and \_\_getitem\_\_ functions for the Dataset class.  Overriding \_\_len\_\_ and \_\_getitem\_\_ is necessary in all child classes of the Pytorch Dataset class as that is what will be called by the Pytorch Dataloader to get values from the dataset.
+With that done, we must now create the \_\_init\_\_, \_\_len\_\_, and \_\_getitem\_\_ functions for the Dataset class.  Overriding \_\_len\_\_ and \_\_getitem\_\_ is necessary in all child classes of the PyTorch Dataset class as that is what will be called by the PyTorch Dataloader to get values from the dataset.
 
 ### Dataset - \_\_init\_\_
 The init is the constructor for our dataset class.  As the training and testing sets are each composed of a set of images and a set of corresponding labels, we will take the root (file location) of the image set and label set as arguments:
@@ -131,7 +131,7 @@ Functions:
 With that the \_\_init\_\_ is finished.  I promise we'll get to the fun stuff soon, just trust the process.
 
 ### Dataset - \_\_len\_\_ and \_\_getitem\_\_
-The length and getitem functions are required as we are extending the Pytorch Dataset class.  Luckily they are very easy to implement.  \_\_len\_\_ just requires us to return the length of the dataset, which we can pull directly from the image set file as it is one of those first 4 integers I mentioned earlier.  \_\_getitem\_\_ requires us to return a single image and label for each call based on a given index, which is simply getting values from an array. 
+The length and getitem functions are required as we are extending the PyTorch Dataset class.  Luckily they are very easy to implement.  \_\_len\_\_ just requires us to return the length of the dataset, which we can pull directly from the image set file as it is one of those first 4 integers I mentioned earlier.  \_\_getitem\_\_ requires us to return a single image and label for each call based on a given index, which is simply getting values from an array. 
 
 We can implement these like so:
 
@@ -242,7 +242,7 @@ Now we are going to read all the image data from the file into a temporary varia
 
     self.images = np.frombuffer(buffer, dtype = np.uint8).astype(np.float32)
 
-This line now reads all the data from the buffer variable as unsigned ints (np.uint8) and stores them into a numpy array as 32-bit floats (np.float32).  We are using floats as Pytorch neural networks, at least the linear ones we'll be using, expect floats rather than double or ints.  This is now our set of image data.  Currently the data is stored as a very long, one-dimensional set of numbers.  To see this, you can add print(self.images.shape) like so:
+This line now reads all the data from the buffer variable as unsigned ints (np.uint8) and stores them into a numpy array as 32-bit floats (np.float32).  We are using floats as PyTorch neural networks, at least the linear ones we'll be using, expect floats rather than double or ints.  This is now our set of image data.  Currently the data is stored as a very long, one-dimensional set of numbers.  To see this, you can add print(self.images.shape) like so:
 
     self.images = np.frombuffer(buffer, dtype = np.uint8).astype(np.float32)
     print(self.images.shape)
@@ -266,7 +266,7 @@ As you can see, the range of the sigmoid function where the derivative (slope) c
 
     self.images = torch.tensor(self.images)
 
-Lastly, neural networks work with tensors, not arrays, so we must convert our numpy array of images to Pytorch tensors.  torch.tensor does exactly this, taking a numpy array as the argument, converting it to a tensor, and then returning it.
+Lastly, neural networks work with tensors, not arrays, so we must convert our numpy array of images to PyTorch tensors.  torch.tensor does exactly this, taking a numpy array as the argument, converting it to a tensor, and then returning it.
 
 With that, we've finished getting the image data ready for the neural network.  Before we move into getting the label data (which should be much faster), I'll do an optional section on testing.
 
@@ -337,7 +337,7 @@ As I explained way back in the file format, the labels only have two integers in
     self.labels = np.frombuffer(buffer, dtype = np.uint8)
     self.labels = torch.tensor(self.labels, dtype = torch.long)
 
-Then we read all the labels into a variable named 'buffer' using the num_labels value we just got from the initial integers. We then read the labels from the buffer as unsigned ints, but now, rather than convert them to floats like we did the image data, we will convert them to longs in the torch.tensor line by making the datatype (dtype) = long.  This time longs are expected for the labels by Pytorch rather than ints.  Keeping them as ints would cause an error when we run the neural network later.
+Then we read all the labels into a variable named 'buffer' using the num_labels value we just got from the initial integers. We then read the labels from the buffer as unsigned ints, but now, rather than convert them to floats like we did the image data, we will convert them to longs in the torch.tensor line by making the datatype (dtype) = long.  This time longs are expected for the labels by PyTorch rather than ints.  Keeping them as ints would cause an error when we run the neural network later.
 
 With that we are done with our dataset class and can finally move into making the neural network!  Before that though, I want to tweak the draw_image function slightly so you can test that the labels work, and then we can move into making the neural network.
 
@@ -396,11 +396,11 @@ Section by section:
     import torch.nn as nn
     class NeuralNet(nn.Module):
 
-The two easy prerequisites to this are importing the neural network package for Pytorch (torch.nn) and then creating the NeuralNet class that extends nn.Module.  Just like how we extended the Dataset class earlier for our dataset, we want to extend the Module class to build our neural network.  All Pytorch neural networks use nn.Module as their base class.  If you're interested, [here](https://pytorch.org/docs/stable/nn.html#torch.nn.Module) is the documentation.
+The two easy prerequisites to this are importing the neural network package for PyTorch (torch.nn) and then creating the NeuralNet class that extends nn.Module.  Just like how we extended the Dataset class earlier for our dataset, we want to extend the Module class to build our neural network.  All PyTorch neural networks use nn.Module as their base class.  If you're interested, [here](https://pytorch.org/docs/stable/nn.html#torch.nn.Module) is the documentation.
 
     super(NeuralNet, self).__init__()
 
-Next we use the super function to call the \_\_init\_\_ of the parent function.  The Pytorch documentation says that this is required, however I haven't found the exact reason why this is done.  Usually super is used so you can inherit methods from the parent, but why it calls the \_\_init\_\_ directly is something I'm not sure of.
+Next we use the super function to call the \_\_init\_\_ of the parent function.  The PyTorch documentation says that this is required, however I haven't found the exact reason why this is done.  Usually super is used so you can inherit methods from the parent, but why it calls the \_\_init\_\_ directly is something I'm not sure of.
 
     self.linear1 = nn.Linear(784, 100)
     self.linear2 = nn.Linear(100, 50)
@@ -492,7 +492,7 @@ Here we will create the batch size for the DataLoaders.  Batches, as the name im
     training_loader = torch.utils.data.DataLoader(training_dataset, batch_size = training_batch_size, shuffle = True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = test_batch_size, shuffle = True)
 
-These two lines handle loading the two datasets into a [Pytorch Dataloader](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader).  The reason for making the custom Pytorch Datasets is so that we could do this.  The format for the DataLoader object (that we are worried about at least) is **DataLoader(dataset, batch_size = 1, shuffle = False)**.  The dataset is the custom one we created, the batch_size is what we just defined, and shuffle, when set to True, reshuffles the data every epoch.  Now we can use this dataloader to feed our dataset into the neural network, and it also shuffles the data every time as a bonus.  Shuffling the dataset serves many purposes, but generally it helps to prevent overfitting as the order which you feed the data into the network may affect the weights of the network if the order remains static across all epochs.  For more complex info on why shuffling is good practice, look at [this answer](https://datascience.stackexchange.com/a/24539/79065) for the more complex explanation and the one below it for a more simple way of putting it.
+These two lines handle loading the two datasets into a [PyTorch Dataloader](https://pytorch.org/docs/stable/data.html#torch.utils.data.DataLoader).  The reason for making the custom PyTorch Datasets is so that we could do this.  The format for the DataLoader object (that we are worried about at least) is **DataLoader(dataset, batch_size = 1, shuffle = False)**.  The dataset is the custom one we created, the batch_size is what we just defined, and shuffle, when set to True, reshuffles the data every epoch.  Now we can use this dataloader to feed our dataset into the neural network, and it also shuffles the data every time as a bonus.  Shuffling the dataset serves many purposes, but generally it helps to prevent overfitting as the order which you feed the data into the network may affect the weights of the network if the order remains static across all epochs.  For more complex info on why shuffling is good practice, look at [this answer](https://datascience.stackexchange.com/a/24539/79065) for the more complex explanation and the one below it for a more simple way of putting it.
 
     num_epochs = 25
 
@@ -573,7 +573,7 @@ Here we compute the loss using the output and labels.  We compare what guesses w
 
     loss.backward()
 
-This explanation will mainly be taken from [this great Pytorch forum post](https://discuss.pytorch.org/t/what-does-the-backward-function-do/9944/2).  **loss.backward()** is used to compute the derivative **dloss/dx** for every parameter **x** which has requires_grad = True.  requires_grad is just used to flag if a parameter needs a gradient computed when used. [This](https://pytorch.org/docs/stable/notes/autograd.html) is the detailed Pytorch documentation on it.  If you don't know what gradients are, don't worry about it for now, but look them up eventually as gradient descent is important to know but beyond the scope of this tutorial. Anyway, once these gradients are computed, **loss.backward()** sums them into **x.grad**.  This is then used in **optimizer.step()**, which is the next line of code.
+This explanation will mainly be taken from [this great PyTorch forum post](https://discuss.pytorch.org/t/what-does-the-backward-function-do/9944/2).  **loss.backward()** is used to compute the derivative **dloss/dx** for every parameter **x** which has requires_grad = True.  requires_grad is just used to flag if a parameter needs a gradient computed when used. [This](https://pytorch.org/docs/stable/notes/autograd.html) is the detailed PyTorch documentation on it.  If you don't know what gradients are, don't worry about it for now, but look them up eventually as gradient descent is important to know but beyond the scope of this tutorial. Anyway, once these gradients are computed, **loss.backward()** sums them into **x.grad**.  This is then used in **optimizer.step()**, which is the next line of code.
 
     optimizer.step()
     
@@ -648,7 +648,7 @@ Here we calculate the loss, get the value of it (the .item() part), and add it t
 
     correct_guesses += torch.eq(guesses, labels.data.view_as(guesses)).sum()
 
-Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (checks if the element at index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then checks if the element at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. The output is then a ByteTensor (basically a list of 0's or 1's) with a 1 at each location where the elements are the same.  By taking the sum of all the 1's in the ByteTensor, we can get the amount of correct guesses the model made.  The view_as function works by changing the dimensions of the tensor you are calling it from to be the same as the input tensor (in this case changing the dimensions of the labels tensor to be the same as the guesses tensor).  Doing labels.data.view_as(guesses) means that we are taking the labels tensor (of Size([1000])), and viewing it as a tensor which is the same dimensions as guesses (Size([1000, 1]). Thus the labels tensor becomes size([1000, 1]) for the course of the operation.  This makes the two tensors 'broadcastable' in Pytorch, which allows us to do operations on them.
+Here we check which guesses were correct.  [torch.eq](https://pytorch.org/docs/stable/torch.html#torch.eq) computes element-wise equality for two tensors (checks if the element at index 0 of tensor 1 is the same as the element at index 0 of tensor 2, then checks if the element at index 1 is same as the element at the other index 1, down the entire list).  In this case the two tensors are the **guesses** tensor and **labels** tensor. The output is then a ByteTensor (basically a list of 0's or 1's) with a 1 at each location where the elements are the same.  By taking the sum of all the 1's in the ByteTensor, we can get the amount of correct guesses the model made.  The view_as function works by changing the dimensions of the tensor you are calling it from to be the same as the input tensor (in this case changing the dimensions of the labels tensor to be the same as the guesses tensor).  Doing labels.data.view_as(guesses) means that we are taking the labels tensor (of Size([1000])), and viewing it as a tensor which is the same dimensions as guesses (Size([1000, 1]). Thus the labels tensor becomes size([1000, 1]) for the course of the operation.  This makes the two tensors 'broadcastable' in PyTorch, which allows us to do operations on them.
 
     test_loss /= len(test_dataset)/test_batch_size
     test_losses.append(test_loss)
@@ -721,9 +721,9 @@ And with that, we are done!  You should now have your first working neural netwo
 If you want to compare your code to the final code, check **main.py** in the above repository.
 
 ## Final Conclusions and Acknowledgments
-I hope this tutorial helped you understand how to load data and create neural networks in Pytorch, as well as see how the two are related.  This was my first tutorial, so, if there are any issues, please email me at **michael.pirrall@gmail.com**.  I'd also appreciate any feedback or questions you may have.  Thanks for using this tutorial and good luck moving forward with neural networks and data science!
+I hope this tutorial helped you understand how to load data and create neural networks in PyTorch, as well as see how the two are related.  This was my first tutorial, so, if there are any issues, please email me at **michael.pirrall@gmail.com**.  I'd also appreciate any feedback or questions you may have.  Thanks for using this tutorial and good luck moving forward with neural networks and data science!
 
 Some acknowledgements:
-* I would very much like to thank the great people at the Rochester Data Science Consortium as I created this tutorial while interning with them.  Please feel free to check out their website: [http://rocdatascience.com/](http://rocdatascience.com/).
+* I would very much like to thank the great people at the Rochester Data Science Consortium, particularly my supervisor [Trevor Richardson](trevor-richardson.github.io), as I created this tutorial while interning with them.  Please feel free to check out the Consortium's website: [http://rocdatascience.com/](http://rocdatascience.com/).
 
-* This tutorial was the combination of knowledge from many tutorials, most significantly from [this tutorial on creating neural networks in Pytorch](https://nextjournal.com/gkoehler/pytorch-mnist) by Gregor Koehler, but also [this series of articles on deep learning for rookies](https://towardsdatascience.com/introducing-deep-learning-and-neural-networks-deep-learning-for-rookies-1-bd68f9cf5883) by Nahua Kang, [this online book on neural networks and deep learning](http://neuralnetworksanddeeplearning.com/) by Michael Nielsen, [this open source tutorial](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/) on Deep Learning Wizard, and, lastly, [this tutorial on building Pytorch Datasets](https://towardsdatascience.com/building-efficient-custom-datasets-in-pytorch-2563b946fd9f) by Syafiq Kamarul Azman.
+* This tutorial was the combination of knowledge from many tutorials, most significantly from [this tutorial on creating neural networks in PyTorch](https://nextjournal.com/gkoehler/pytorch-mnist) by Gregor Koehler, but also [this series of articles on deep learning for rookies](https://towardsdatascience.com/introducing-deep-learning-and-neural-networks-deep-learning-for-rookies-1-bd68f9cf5883) by Nahua Kang, [this online book on neural networks and deep learning](http://neuralnetworksanddeeplearning.com/) by Michael Nielsen, [this open source tutorial](https://www.deeplearningwizard.com/deep_learning/practical_pytorch/pytorch_feedforward_neuralnetwork/) on Deep Learning Wizard, and, lastly, [this tutorial on building PyTorch Datasets](https://towardsdatascience.com/building-efficient-custom-datasets-in-pytorch-2563b946fd9f) by Syafiq Kamarul Azman.
